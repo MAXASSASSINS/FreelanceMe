@@ -63,17 +63,19 @@ export const uploadToCloudinaryV2 = async (
 };
 
 let POST_URL =
-  "https://api.cloudinary.com/v1_1/" + "dyod45bn8" + "/auto/upload";
-
-const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
+  "https://api.cloudinary.com/v1_1/" + cloudName + "/auto/upload";
 
 const processFile = async (file: File) => {
   let size = file.size;
-  let sliceSize = 6000000;
+  let sliceSize = 5 * 1024 * 1024;
   let start = 0;
   let numberOfSlices = Math.ceil(size / sliceSize);
 
   let data;
+
+  let XUniqueUploadId = (Math.random() * 100000000 + Date.now()).toString();
+  console.log("XUniqueUploadId", XUniqueUploadId);
+  
 
   for (let i = 0; i < numberOfSlices; i++) {
     try {
@@ -82,8 +84,8 @@ const processFile = async (file: File) => {
         end = size;
       }
       let s = file.slice(start, end);
-      await delay(3);
-      data = await send(s, start, end - 1, size);
+      data = await send(s, start, end - 1, size, XUniqueUploadId);
+      console.log('data', data.data);
       start += sliceSize;
     } catch (error) {
       console.log(error);
@@ -93,15 +95,13 @@ const processFile = async (file: File) => {
   return data;
 };
 
-const send = async (piece: Blob, start: number, end: number, size: number) => {
+const send = async (piece: Blob, start: number, end: number, size: number, XUniqueUploadId: string) => {
   const formData = new FormData();
 
   formData.append("file", piece);
   formData.append("cloud_name", "dyod45bn8");
   formData.append("upload_preset", "syxrot1t");
   formData.append("folder", "FreelanceMe");
-
-  let XUniqueUploadId = +new Date();
 
   const headers = {
     "Content-Range": `bytes ${start}-${end}/${size}`,
@@ -112,6 +112,7 @@ const send = async (piece: Blob, start: number, end: number, size: number) => {
     const res = await axios.post(POST_URL, formData, { headers });
     return res;
   } catch (error) {
+    console.log(error);
     return Promise.reject(error);
   }
 };

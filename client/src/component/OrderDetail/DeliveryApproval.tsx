@@ -4,13 +4,12 @@ import { FaRobot } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { updateOrderDetail } from "../../actions/orderAction";
-import { axiosInstance } from "../../utility/axiosInstance";
-import { ChatBox } from "./ChatBox";
-// @ts-ignore
 import { toast } from "react-toastify";
+import { updateOrderDetail } from "../../actions/orderAction";
 import { AppDispatch, RootState } from "../../store";
 import { IUser } from "../../types/user.types";
+import { axiosInstance } from "../../utility/axiosInstance";
+import { ChatBox } from "./ChatBox";
 
 type DeliveryApprovalProps = {
   setFileLoading: (val: boolean) => void;

@@ -91,7 +91,7 @@ export const TextEditor = forwardRef(
       <div className="textEditor-main">
         <div
           className="textEditor-toolbar"
-          style={{ display: hideToolbar ? "none" : "block" }}
+          style={{ display: hideToolbar ? "none" : "flex" }}
         >
           {inlineStyleButtons.map((button, index) => {
             return (

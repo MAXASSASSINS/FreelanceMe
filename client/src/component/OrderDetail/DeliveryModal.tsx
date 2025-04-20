@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
-import { DataSendingLoading } from "../DataSendingLoading/DataSendingLoading";
+import { DataSendingLoading } from "../DataSendingLoading";
 import { ChatBox } from "./ChatBox";
 
 type DeliveryModalProps = {

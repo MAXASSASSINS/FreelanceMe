@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL =
+export const baseURL =
   process.env.REACT_APP_MODE === "PROD"
     ? "https://freelanceme-backend.onrender.com" // Production URL
     : "http://localhost:4000"; // Development URL

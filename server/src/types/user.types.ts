@@ -76,7 +76,6 @@ export interface IUser extends Document {
   userSince: Date;
   lastSeen: Date;
   balance: number;
-  stripeAccountId: string;
   withdrawEligibility: boolean;
   razorPayAccountDetails: IRazorPayAccountDetails;
   lastDelivery?: Date;

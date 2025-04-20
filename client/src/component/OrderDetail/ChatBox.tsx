@@ -1,7 +1,6 @@
-import { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateOrderDetail } from "../../actions/orderAction";
-import { SocketContext } from "../../context/socket/socket";
+import { useSocket } from "../../context/socketContext";
 import { AppDispatch, RootState } from "../../store";
 import { IFile } from "../../types/file.types";
 import { IMessage } from "../../types/message.types";
@@ -27,7 +26,7 @@ export const ChatBox = ({
   isRevisionMessage = false,
 }: ChatBoxProps) => {
   const dispatch = useDispatch<AppDispatch>();
-  const socket = useContext(SocketContext);
+  const socket = useSocket();
 
   const { user } = useSelector((state: RootState) => state.user);
 

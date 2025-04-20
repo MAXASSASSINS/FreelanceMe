@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       setRedirectUrl(location.pathname);
       navigate("/login");
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, location.pathname, navigate]);
 
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };

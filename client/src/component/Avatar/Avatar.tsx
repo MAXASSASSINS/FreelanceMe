@@ -1,4 +1,3 @@
-import React from "react";
 
 type AvatarProps = {
   avatarUrl?: string;
@@ -8,6 +7,7 @@ type AvatarProps = {
   alt?: string;
   onlineStatusWidth?: string;
   fontSize?: string;
+  useWebp?: boolean;
 };
 
 export const Avatar = ({
@@ -16,9 +16,13 @@ export const Avatar = ({
   onlineStatus,
   width,
   alt,
-  onlineStatusWidth,
+  onlineStatusWidth = "0.75rem",
   fontSize = "1.125rem",
+  useWebp = false
 }: AvatarProps) => {
+  if (useWebp && avatarUrl) {
+    avatarUrl = avatarUrl.replace(/\.[^.]+$/, ".webp");
+  }
   return (
     <div style={{ width: width, height: width }} className="relative">
       {onlineStatus !== undefined && (
@@ -32,7 +36,7 @@ export const Avatar = ({
         />
       )}
       {avatarUrl ? (
-        <img src={avatarUrl} alt={alt} className="w-full h-full rounded-full" />
+        <img src={avatarUrl} alt={alt} className="w-full h-full object-cover rounded-full" />
       ) : (
         <div className="w-full bg-no_focus h-full rounded-full flex items-center justify-center">
           <p

@@ -66,6 +66,7 @@
   height: 4rem;
   overflow: hidden;
   transition: all 0.15s ease;
+  word-break: break-all;
 }
 
 .ratings-container {

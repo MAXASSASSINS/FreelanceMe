@@ -12,7 +12,7 @@ const sendToken = (user: IUser, statusCode: number, res: Response) => {
 
   // options for cookie
   const options: CookieOptions = {
-    maxAge: Date.now() + cookie_expire * 24 * 60 * 60 * 1000,
+    maxAge: cookie_expire * 24 * 60 * 60 * 1000,
     sameSite: "none",
     secure: true,
   };

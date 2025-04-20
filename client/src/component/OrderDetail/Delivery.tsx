@@ -51,7 +51,7 @@ export const Delivery = ({ orderDetail }: DeliveryProps) => {
                   >
                     <div className="aspect-square rounded-full">
                       <Avatar
-                        avatarUrl={seller.avatar.url}
+                        avatarUrl={seller.avatar?.url}
                         userName={seller.name}
                         width="2rem"
                         fontSize="1rem"

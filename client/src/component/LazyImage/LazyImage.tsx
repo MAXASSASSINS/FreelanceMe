@@ -31,7 +31,7 @@ export const LazyImage = ({
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <img
         data-src={url}
         className="w-full"
@@ -41,7 +41,7 @@ export const LazyImage = ({
         onLoad={handleOnLoad}
       />
       <Blurhash
-        className="absolute z-20 top-0 left-0"
+        className={`!absolute z-20 top-0 left-0`}
         hash={blurhash ? blurhash : defaultBlurhash}
         width="100%"
         height="100%"

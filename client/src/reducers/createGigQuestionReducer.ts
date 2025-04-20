@@ -12,7 +12,7 @@ type Action = {
   payload?: any;
 };
 
-type QuestionState = {
+export type QuestionState = {
   question: string;
   type: string;
   multipleOptionSelectionStatus: boolean;
@@ -50,6 +50,8 @@ export const createGigQuestionReducer = (state = QUESTION_DETAILS_INITIAL_STATE,
     }
 
     case UPDATE_SHOW_EDIT_QUESTION: {
+      console.log('UPDATE_SHOW_EDIT_QUESTION');
+      
       const { questionIndex, showEditQuestion } = action.payload;
       let newState = [...state];
       newState = newState.map((question, index) => {
@@ -98,6 +100,8 @@ export const createGigQuestionReducer = (state = QUESTION_DETAILS_INITIAL_STATE,
     }
 
     case HIDE_ALL_EDIT_QUESTION: {
+      console.log('HIDE_ALL_EDIT_QUESTION');
+      
       const newState = [...state];
       newState.map((question) => {
         question.showEditQuestion = false;

@@ -14,7 +14,7 @@ export interface ILanguage {
 export interface IReview {
   user: IUser | string;
   name: string;
-  avatar: IFile;
+  avatar?: IFile;
   country: string;
   rating: number;
   comment: string;
@@ -59,7 +59,7 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
-  avatar: IFile;
+  avatar?: IFile;
   phone?: IPhone;
   ratings: number;
   numOfRatings: number;
@@ -76,7 +76,6 @@ export interface IUser {
   userSince: Date;
   lastSeen: Date;
   balance: number;
-  stripeAccountId: string;
   withdrawEligibility: boolean;
   razorPayAccountDetails: IRazorPayAccountDetails;
   lastDelivery?: Date;

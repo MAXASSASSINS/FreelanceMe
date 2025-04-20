@@ -1,76 +1,90 @@
-import { useState } from "react";
-import Carousel from "react-bootstrap/Carousel";
-import { IoMdImages } from "react-icons/io";
+import React from "react";
+import { EmblaOptionsType } from "embla-carousel";
+import {
+  PrevButton,
+  NextButton,
+  usePrevNextButtons,
+} from "./EmblaCarouselArrowButtons";
+import useEmblaCarousel from "embla-carousel-react";
+import "./embla.css";
 import { IGig } from "../../types/gig.types";
 import { LazyImage } from "../LazyImage/LazyImage";
 import { LazyVideo } from "../LazyVideo.js/LazyVideo";
-import "./myCarousel.css";
+import { RiImage2Line } from "react-icons/ri";
 
-type MyCarouselProps = {
+type PropType = {
   gig: IGig;
+  options?: EmblaOptionsType;
   lazyLoad: boolean;
   useWebp?: boolean;
 };
 
-export const MyCarousel = ({ gig, lazyLoad, useWebp = false }: MyCarouselProps) => {
-  const [arrows, setArrows] = useState<boolean>(false);
+const MyCarousel: React.FC<PropType> = (props) => {
+  const { options, gig, lazyLoad, useWebp } = props;
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    ...options,
+  });
 
-  const showArrows = () => {
-    setArrows(true);
-  };
-
-  const hideArrows = () => {
-    setArrows(false);
-  };
-
-  const len = (gig.images?.length || 0) + (gig.video ? 1 : 0);
+  const {
+    prevBtnDisabled,
+    nextBtnDisabled,
+    onPrevButtonClick,
+    onNextButtonClick,
+  } = usePrevNextButtons(emblaApi);
 
   const objectFit = window.location.href.includes("/gig/details")
     ? "contain"
     : "cover";
-  return (
-    <div
-      className="slides-preview"
-      onMouseEnter={showArrows}
-      onMouseLeave={hideArrows}
-    >
-      {gig && gig.images?.length === 0 ? (
-        <div className="no-images-container">
-          <IoMdImages className="no-images-icon"></IoMdImages>
-        </div>
-      ) : (
-        <Carousel
-          interval={null}
-          touch={true}
-          indicators={false}
-          controls={len > 1 && arrows}
-        >
-          {gig.images?.map(
-            (image) =>
-              image && (
-                <Carousel.Item key={image._id} >
-                  <LazyImage
-                    file={image}
-                    lazyLoad={lazyLoad}
-                    aspectRatio={16 / 10}
-                    objectFit={objectFit}
-                    useWebp={useWebp}
-                  />
-                </Carousel.Item>
-              )
-          )}
 
+  return (
+    <section className="embla group relative">
+      <div className="embla__viewport aspect-[16/10]" ref={emblaRef}>
+        <div className="embla__container aspect-[16/10]">
+          {gig.images?.map((image, index) => (
+            <div className="embla__slide" key={index}>
+              <LazyImage
+                file={image}
+                lazyLoad={lazyLoad}
+                aspectRatio={16 / 10}
+                objectFit={objectFit}
+                useWebp={useWebp}
+              />
+            </div>
+          ))}
           {gig.video && (
-            <Carousel.Item key={gig.video._id}>
+            <div className="embla__slide aspect-[16/10]">
               <LazyVideo
                 file={gig.video}
                 lazyLoad={lazyLoad}
                 aspectRatio={16 / 10}
+                objectFit={objectFit}
               />
-            </Carousel.Item>
+            </div>
           )}
-        </Carousel>
+          {gig.images.length === 0 && !gig.video && (
+            <div className="embla__slide">
+              <RiImage2Line className="text-no_focus w-full h-full" />
+            </div>
+          )}
+        </div>
+      </div>
+      {(gig.images?.length > 1 || gig.video) && (
+        <div className="group-hover:visible invisible">
+          <PrevButton
+            onClick={onPrevButtonClick}
+            className="absolute bg-[rgba(255,255,255,0.4)] text-dark_grey  rounded-full top-1/2 -translate-y-1/2  left-2 hover:cursor-pointer"
+            disabled={prevBtnDisabled}
+          />
+          <NextButton
+            onClick={onNextButtonClick}
+            className="absolute bg-[rgba(255,255,255,0.4)] text-dark_grey rounded-full top-1/2 -translate-y-1/2 right-2 hover:cursor-pointer"
+            disabled={nextBtnDisabled}
+          />
+        </div>
       )}
-    </div>
+    </section>
   );
 };
+
+export default MyCarousel;

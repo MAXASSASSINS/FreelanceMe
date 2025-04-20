@@ -1,11 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../../component/common.css";
 import { BsFacebook, BsInstagram } from "react-icons/bs";
 import { FaGooglePlay } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
+// List of paths where footer will be hidden
+const pathsWithoutFooter = [
+  "/get/all/messages/for/current/user",
+  "/gig/create/new/gig",
+  "/login",
+  "/signUp",
+  "/orders/",
+  "/update/profile",
+  "/reset/password/",
+];
 
 export const Footer = () => {
+  const location = useLocation();
+  const [hideFooter, setHideFooter] = useState(false);
+
+  useEffect(() => {
+    const hideFooter = pathsWithoutFooter.includes(location.pathname);
+    setHideFooter(hideFooter);
+  }, [location.pathname])
+
   return (
+    !hideFooter &&
     <footer className="px-6 py-6 text-light_heading border-t w-full">
       <div className="flex items-center gap-12 justify-between">
         <div className="flex gap-2">

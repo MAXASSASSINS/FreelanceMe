@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { IGig } from "../types/gig.types";
 import { FREE_TEXT, MULTIPLE_CHOICE } from "../constants/globalConstants";
 import fileSchema from "./fileSchema";
+import { IFile } from "../types/file.types";
 
 const gigSchema = new mongoose.Schema<IGig>({
   title: {
@@ -65,7 +66,19 @@ const gigSchema = new mongoose.Schema<IGig>({
     // required: [true, "Please enter the description of your gig"]
   },
   images: [fileSchema],
-  video: fileSchema,
+  video: {
+    type: fileSchema,
+    validate: {
+      validator: function (value: IFile | null | undefined) {
+        if (!value) return true; 
+        return (
+          value.name && value.url && value.type && value.size && value.publicId
+        );
+      },
+      message:
+        "If a video is provided, it must include 'name', 'url', 'type', 'size', and 'publicId'.",
+    },
+  },
   ratings: {
     type: Number,
     default: 0,

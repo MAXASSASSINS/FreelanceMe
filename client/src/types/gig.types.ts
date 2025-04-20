@@ -1,16 +1,6 @@
 import { QuestionType } from "./../constants/globalConstants";
 import { IFile } from "./file.types";
-import { IUser } from "./user.types";
-
-export interface IReview {
-  user: IUser | string;
-  name: string;
-  avatar: IFile,
-  country: string;
-  rating: number;
-  comment: string;
-  createdAt?: Date;
-}
+import { IReview, IUser } from "./user.types";
 
 export interface IPricing {
   packageTitle: string;

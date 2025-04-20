@@ -1,4 +1,3 @@
-// @ts-ignore
 import { toast } from "react-toastify";
 import { AnyAction, Dispatch } from "redux";
 import {
