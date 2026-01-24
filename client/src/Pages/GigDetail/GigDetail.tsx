@@ -46,6 +46,8 @@ export const GigDetail = () => {
   const [showChatBox, setShowChatBox] = useState<boolean>(false);
   const [selectedRating, setSelectedRating] = useState<number>(-1);
 
+  const scrollDownToUserDetailRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     dispatch(getGigDetail(params.id!));
   }, [dispatch, params.id]);
@@ -159,14 +161,28 @@ export const GigDetail = () => {
                 fontSize="1rem"
               />
 
-              <a href="#gig-owner-details-id">
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  scrollDownToUserDetailRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                }
+              >
                 <div className="gig-seller-overview-seller-name">
                   {gigDetail.user.name}
                 </div>
-              </a>
-              <a href="#review-container">
-                <RatingStars rating={gigDetail.ratings}></RatingStars>
-              </a>
+              </div>
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  scrollDownToUserDetailRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                }
+              >
+                <RatingStars rating={gigDetail.ratings} />
+              </div>
               <div>{gigDetail.ratings.toFixed(1)}</div>
               <div>({gigDetail.numOfRatings})</div>
             </div>
@@ -202,7 +218,11 @@ export const GigDetail = () => {
               />
             </div>
           </div>
-          <div id="gig-owner-details-id" className="gig-owner-details-div">
+          <div
+            ref={scrollDownToUserDetailRef}
+            id="gig-owner-details-id"
+            className="gig-owner-details-div"
+          >
             <header>
               <h2>About The Seller</h2>
             </header>
