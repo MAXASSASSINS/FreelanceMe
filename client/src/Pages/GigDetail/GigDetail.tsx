@@ -121,16 +121,15 @@ export const GigDetail = () => {
   };
 
   if (!gigDetail) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen w-full"></div>
   }
 
   gigDetail.user = gigDetail.user as IUser;
 
-  return gigDetail ? (
-    <>
+  return <>
       {showChatBox && (
         <Chat
-          chatUser={gigDetail.user}
+          chatUser={gigDetail.user as IUser}
           showChatBox={showChatBox}
           setShowChatBox={setShowChatBox}
         ></Chat>
@@ -328,7 +327,4 @@ export const GigDetail = () => {
         )}
       </div>
     </>
-  ) : (
-    <div className="min-h-screen w-full"></div>
-  );
 };
