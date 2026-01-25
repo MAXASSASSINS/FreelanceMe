@@ -187,7 +187,7 @@ export const GigDetail = () => {
             </div>
           </div>
           <div className="gig-details-carousel">
-            <MyCarousel lazyLoad={false} gig={gigDetail} imageQuality="high" ></MyCarousel>
+            <MyCarousel lazyLoad={false} gig={gigDetail} imageQuality="original" ></MyCarousel>
           </div>
           {pricePackageInfo && (
             <PackageSelector
