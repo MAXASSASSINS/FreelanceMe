@@ -110,6 +110,7 @@ export const Home = () => {
                   lazyLoad={true}
                   gig={gig}
                   key={gig._id}
+                  imageQuality="low"
                 />
               );
             })}

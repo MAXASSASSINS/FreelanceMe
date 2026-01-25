@@ -13,14 +13,16 @@ import { axiosInstance } from "../../utility/axiosInstance";
 import { Avatar } from "../Avatar/Avatar";
 import "./gigCard.css";
 import MyCarousel from "../Carousel/MyCarousel";
+import { ImageQuality } from "../../utility/cloudinary";
 
 type GigCardProps = {
   gig: IGig;
   lazyLoad?: boolean;
   online?: boolean;
+  imageQuality?: ImageQuality
 };
 
-export const GigCard = ({ gig, lazyLoad = false, online }: GigCardProps) => {
+export const GigCard = ({ gig, lazyLoad = false, online, imageQuality }: GigCardProps) => {
   // console.log(online);
 
   const navigate = useNavigate();
@@ -70,7 +72,7 @@ export const GigCard = ({ gig, lazyLoad = false, online }: GigCardProps) => {
   return (
     <div className="gig-card">
       <div className="container-wrapper">
-        <MyCarousel useWebp={true} lazyLoad={lazyLoad} gig={gig} />
+        <MyCarousel useWebp={true} lazyLoad={lazyLoad} gig={gig} imageQuality={imageQuality} />
         <div className="user-details-container">
           <Avatar
             avatarUrl={gig.user.avatar?.url}
