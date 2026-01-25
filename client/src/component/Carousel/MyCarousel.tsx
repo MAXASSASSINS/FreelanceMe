@@ -11,16 +11,18 @@ import { IGig } from "../../types/gig.types";
 import { LazyImage } from "../LazyImage/LazyImage";
 import { LazyVideo } from "../LazyVideo.js/LazyVideo";
 import { RiImage2Line } from "react-icons/ri";
+import { ImageQuality } from "../../utility/cloudinary";
 
 type PropType = {
   gig: IGig;
   options?: EmblaOptionsType;
   lazyLoad: boolean;
   useWebp?: boolean;
+  imageQuality?: ImageQuality
 };
 
 const MyCarousel: React.FC<PropType> = (props) => {
-  const { options, gig, lazyLoad, useWebp } = props;
+  const { options, gig, lazyLoad, useWebp, imageQuality } = props;
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     ...options,
@@ -49,6 +51,7 @@ const MyCarousel: React.FC<PropType> = (props) => {
                 aspectRatio={16 / 10}
                 objectFit={objectFit}
                 useWebp={useWebp}
+                imageQuality={imageQuality}
               />
             </div>
           ))}

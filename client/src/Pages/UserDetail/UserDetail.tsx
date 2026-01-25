@@ -17,8 +17,8 @@ export const UserDetail = () => {
   const params = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const [showChatBox, setShowChatBox] = useState<boolean>(false);
-  const { user: gigUser } = useSelector((state: RootState) => state.gigUser);
-  const { userGigs } = useSelector((state: RootState) => state.userGigs);
+  const { user: gigUser, userLoading } = useSelector((state: RootState) => state.gigUser);
+  const { userGigs, gigLoading } = useSelector((state: RootState) => state.userGigs);
 
   useEffect(() => {
     if (params.id) {
@@ -26,6 +26,10 @@ export const UserDetail = () => {
       dispatch(getUserGigs(params.id));
     }
   }, [dispatch, params.id]);
+
+  if (userLoading || gigLoading) {
+    return <div className="min-h-screen w-full"></div>
+  }
 
   return (
     userGigs && (

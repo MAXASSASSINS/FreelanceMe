@@ -116,3 +116,21 @@ const send = async (piece: Blob, start: number, end: number, size: number, XUniq
     return Promise.reject(error);
   }
 };
+
+export type ImageQuality = "low" | "medium" | "high" | "original"
+
+export const getCloudinaryTransform = (quality: ImageQuality) => {
+  switch (quality) {
+    case "low":
+      return "f_webp,q_20";   
+    case "medium":
+      return "f_auto,q_60,";   
+    case "high":
+      return "f_auto,q_90";
+    case "original":
+      return ""
+    default:
+      return "";
+  }
+};
+

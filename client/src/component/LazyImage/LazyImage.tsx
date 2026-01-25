@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Blurhash } from "react-blurhash";
 import { IFile } from "../../types/file.types";
+import { getCloudinaryTransform, ImageQuality } from "../../utility/cloudinary";
 
 type LazyImageProps = {
   file: IFile;
@@ -8,6 +9,7 @@ type LazyImageProps = {
   aspectRatio?: string | number;
   objectFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
   useWebp?: boolean;
+  imageQuality?: ImageQuality
 };
 
 export const LazyImage = ({
@@ -16,6 +18,7 @@ export const LazyImage = ({
   aspectRatio = "auto",
   objectFit = "cover",
   useWebp = false,
+  imageQuality,
 }: LazyImageProps) => {
   let { url, blurhash } = file;
   const defaultBlurhash = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
@@ -26,10 +29,16 @@ export const LazyImage = ({
     setLoaded(true);
   };
 
-  if (useWebp) {
-    url =  url.replace(/\.[^.]+$/, ".webp");
-  }
+  // if (useWebp) {
+  //   console.log(url)
+  //   url =  url.replace(/\.[^.]+$/, ".webp");
+  // }
 
+  const transform = getCloudinaryTransform(imageQuality ?? "medium");
+
+  url = url.replace("/upload/", `/upload/${transform}/`);
+
+  console.log(url)
   return (
     <div className="relative h-full">
       <img

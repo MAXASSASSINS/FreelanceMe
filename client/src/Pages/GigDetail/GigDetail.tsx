@@ -46,6 +46,8 @@ export const GigDetail = () => {
   const [showChatBox, setShowChatBox] = useState<boolean>(false);
   const [selectedRating, setSelectedRating] = useState<number>(-1);
 
+  const scrollDownToUserDetailRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     dispatch(getGigDetail(params.id!));
   }, [dispatch, params.id]);
@@ -119,16 +121,15 @@ export const GigDetail = () => {
   };
 
   if (!gigDetail) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen w-full"></div>
   }
 
   gigDetail.user = gigDetail.user as IUser;
 
-  return gigDetail ? (
-    <>
+  return <>
       {showChatBox && (
         <Chat
-          chatUser={gigDetail.user}
+          chatUser={gigDetail.user as IUser}
           showChatBox={showChatBox}
           setShowChatBox={setShowChatBox}
         ></Chat>
@@ -159,20 +160,34 @@ export const GigDetail = () => {
                 fontSize="1rem"
               />
 
-              <a href="#gig-owner-details-id">
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  scrollDownToUserDetailRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                }
+              >
                 <div className="gig-seller-overview-seller-name">
                   {gigDetail.user.name}
                 </div>
-              </a>
-              <a href="#review-container">
-                <RatingStars rating={gigDetail.ratings}></RatingStars>
-              </a>
+              </div>
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  scrollDownToUserDetailRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                }
+              >
+                <RatingStars rating={gigDetail.ratings} />
+              </div>
               <div>{gigDetail.ratings.toFixed(1)}</div>
               <div>({gigDetail.numOfRatings})</div>
             </div>
           </div>
           <div className="gig-details-carousel">
-            <MyCarousel lazyLoad={false} gig={gigDetail}></MyCarousel>
+            <MyCarousel lazyLoad={false} gig={gigDetail} imageQuality="original" ></MyCarousel>
           </div>
           {pricePackageInfo && (
             <PackageSelector
@@ -202,7 +217,11 @@ export const GigDetail = () => {
               />
             </div>
           </div>
-          <div id="gig-owner-details-id" className="gig-owner-details-div">
+          <div
+            ref={scrollDownToUserDetailRef}
+            id="gig-owner-details-id"
+            className="gig-owner-details-div"
+          >
             <header>
               <h2>About The Seller</h2>
             </header>
@@ -308,7 +327,4 @@ export const GigDetail = () => {
         )}
       </div>
     </>
-  ) : (
-    <div className="min-h-screen w-full"></div>
-  );
 };
