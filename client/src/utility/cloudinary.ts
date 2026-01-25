@@ -122,7 +122,7 @@ export type ImageQuality = "low" | "medium" | "high" | "original"
 export const getCloudinaryTransform = (quality: ImageQuality) => {
   switch (quality) {
     case "low":
-      return "f_webp,q_10";   
+      return "f_webp,q_20";   
     case "medium":
       return "f_auto,q_60,";   
     case "high":
@@ -130,7 +130,7 @@ export const getCloudinaryTransform = (quality: ImageQuality) => {
     case "original":
       return ""
     default:
-      return "f_auto";
+      return "";
   }
 };
 
