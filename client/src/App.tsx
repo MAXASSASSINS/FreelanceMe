@@ -22,7 +22,6 @@ import { Test } from "./component/Test/Test";
 import { UserDetail } from "./component/UserDetail/UserDetail";
 import { AppDispatch, RootState } from "./store";
 
-import { SocketContext, socket } from "./context/socket/socket";
 // @ts-ignore
 import { CloudinaryContext } from "cloudinary-react";
 import { Tooltip } from "./component/Tooltip/Tooltip";
@@ -34,6 +33,7 @@ import { BuyerFeedback } from "./component/Feedback/BuyerFeedback";
 import { OrderDetail } from "./component/OrderDetail/OrderDetail";
 import { Orders } from "./component/Orders/Orders";
 import { SignUp } from "./component/SignUp";
+import SocketContextProvider from "./context/socketContext";
 
 import { useDispatch } from "react-redux";
 import { BankAccountForm } from "./component/BankAccountForm";
@@ -71,14 +71,15 @@ const App = () => {
   height = Math.max(pageheight, height);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      await dispatch(loadUser());
-      navigate("/");
+    const onFocus = () => {
+      dispatch(loadUser());
     };
-
-    fetchUser();
-    localStorage.setItem("redirectUrl", "/");
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+    };
   }, []);
+  
 
   useEffect(() => {
     let resizeWindow = () => {
@@ -90,37 +91,37 @@ const App = () => {
     return () => window.removeEventListener("resize", resizeWindow);
   }, []);
 
-  useEffect(() => {
-    const handleNewUser = () => {
-      console.log("handle new user is called");
-      if (isAuthenticated && user?._id) {
-        socket.emit("new_user", user._id.toString());
-      }
-    };
+  // useEffect(() => {
+  //   const handleNewUser = () => {
+  //     console.log("handle new user is called");
+  //     if (isAuthenticated && user?._id) {
+  //       socket.emit("new_user", user._id.toString());
+  //     }
+  //   };
 
-    // Emit on connect
-    socket.on("connect", handleNewUser);
+  //   // Emit on connect
+  //   socket.on("connect", handleNewUser);
 
-    if (isAuthenticated && user?._id) {
-      socket.emit("new_user", user._id.toString());
-    }
+  //   if (isAuthenticated && user?._id) {
+  //     socket.emit("new_user", user._id.toString());
+  //   }
 
-    // Clean up
-    return () => {
-      socket.off("connect", handleNewUser);
-    };
-  }, [isAuthenticated, user, userLoading]);
+  //   // Clean up
+  //   return () => {
+  //     socket.off("connect", handleNewUser);
+  //   };
+  // }, [isAuthenticated, user, userLoading]);
 
-  // SHOW ONLINE STATUS OF THE USER
-  useEffect(() => {
-    socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-    const interval = setInterval(() => {
-      socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-    }, 10000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [user, isAuthenticated]);
+  // // SHOW ONLINE STATUS OF THE USER
+  // useEffect(() => {
+  //   socket.emit("online", isAuthenticated ? user?._id.toString() : null);
+  //   const interval = setInterval(() => {
+  //     socket.emit("online", isAuthenticated ? user?._id.toString() : null);
+  //   }, 10000);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [user, isAuthenticated]);
 
   // List of paths where footer will be hidden
   const pathsWithoutFooter = [
@@ -143,7 +144,7 @@ const App = () => {
       <ScrollToTop>
         <windowContext.Provider value={{ windowWidth, windowHeight }}>
           <CloudinaryContext cloudName="dyod45bn8" uploadPreset="syxrot1t">
-            <SocketContext.Provider value={socket}>
+            <SocketContextProvider>
               <DataSendingLoading
                 show={globalLoading}
                 loadingText={globalLoadingText}
@@ -264,7 +265,7 @@ const App = () => {
                 }
               ></div>
               {!hideFooter && <Footer />}
-            </SocketContext.Provider>
+            </SocketContextProvider>
           </CloudinaryContext>
         </windowContext.Provider>
       </ScrollToTop>
