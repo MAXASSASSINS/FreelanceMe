@@ -1,8 +1,11 @@
-import { Server as SocketIOServer } from "socket.io";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import User from "../models/userModel";
 import ErrorHandler from "./errorHandler";
 import { Server as HTTPServer } from 'http';
 import { log } from "console";
+import jwt from "jsonwebtoken";
+
+type CustomSocket = Socket & { user?: { id: string } };
 
 const runSocket = (server: HTTPServer) => {
   const io = new SocketIOServer(server, {
