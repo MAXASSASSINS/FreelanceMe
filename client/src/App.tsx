@@ -71,8 +71,12 @@ const App = () => {
   height = Math.max(pageheight, height);
 
   useEffect(() => {
+    dispatch(loadUser());
+  }, []);
+
+  useEffect(() => {
     const onFocus = () => {
-      dispatch(loadUser());
+      dispatch(loadUser(true));
     };
     window.addEventListener("focus", onFocus);
     return () => {
