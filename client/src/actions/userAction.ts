@@ -21,7 +21,7 @@ import {
 import { axiosInstance } from "../utility/axiosInstance";
 import { Dispatch, AnyAction } from "redux";
 import { IUser } from "../types/user.types";
-import { AppDispatch } from "../store";
+import { AppDispatch, RootState } from "../store";
 
 export const getUser =
   (id: string)  =>
@@ -146,7 +146,21 @@ export const signUpUser = (
 };
 
 export const loadUser =
-  ()  => async (dispatch: Dispatch<AnyAction>) => {
+  (silent = false)  => async (dispatch: Dispatch<AnyAction>, getState: () => RootState) => {
+    const { isAuthenticated } = getState().user;
+    if (isAuthenticated && silent) {
+      console.log('silent')
+      try {
+        const { data } = await axiosInstance.get("/me");
+        dispatch({
+          type: LOAD_USER_SUCCESS,
+          payload: data.user,
+        });
+      } catch {
+        // ignore silently
+      }
+      return;
+    }
     try {
       dispatch({ type: LOAD_USER_REQUEST });
       const { data } = await axiosInstance.get("/me");
