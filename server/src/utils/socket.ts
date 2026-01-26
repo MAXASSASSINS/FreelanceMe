@@ -1,27 +1,63 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import User from "../models/userModel";
 import ErrorHandler from "./errorHandler";
-import { Server as HTTPServer } from 'http';
+import { Server as HTTPServer } from "http";
 import { log } from "console";
 import jwt from "jsonwebtoken";
 
 type CustomSocket = Socket & { user?: { id: string } };
+interface AuthTokenPayload extends jwt.JwtPayload {
+  id: string;
+}
 
 const runSocket = (server: HTTPServer) => {
   const io = new SocketIOServer(server, {
-    // pingTimeout: 60000,
+    transports: ['websocket'],
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
+      origin: true,
+      credentials: true,
     },
   });
+  
 
   let onlineUserList = new Map();
 
-  io.on("connection", (socket) => {
-    console.log(onlineUserList);
+  io.on("connection", (socket: CustomSocket) => {
+    console.log("socket connection event");
+    socket.user = undefined;
+
+    socket.on("login", (token: string) => {
+      if (socket.user) return;
+      console.log("login event");
+      try {
+        const payload = jwt.verify(
+          token,
+          process.env.JWT_SECRET!
+        ) as AuthTokenPayload;
+
+        if (!payload.id) {
+          throw new Error("Invalid token payload");
+        }
+
+        socket.user = { id: payload.id };
+        addNewUser(payload.id, socket.id);
+        console.log(onlineUserList);
+      } catch {
+        socket.disconnect();
+      }
+    });
+
+    socket.on("logout", () => {
+      console.log("logout event");
+      if (socket.user) {
+        removeUser(socket.id, socket.user.id);
+        socket.user = undefined;
+      }
+      console.log(onlineUserList);
+    });
+
     socket.on("new_user", (userId) => {
-      console.log('new user connected', userId, socket.id);
+      console.log("new user connected", userId, socket.id);
       addNewUser(userId, socket.id);
     });
 
@@ -31,7 +67,7 @@ const runSocket = (server: HTTPServer) => {
 
     socket.on("send_message", async (data) => {
       const { sender, receiver } = data;
-      
+
       const receiverSocketIds = onlineUserList.get(receiver._id.toString());
       const senderSocketIds = onlineUserList.get(sender._id.toString());
 
@@ -40,7 +76,7 @@ const runSocket = (server: HTTPServer) => {
       });
 
       senderSocketIds?.forEach((senderSocketId: string) => {
-        log('senderSocketId', senderSocketId);
+        log("senderSocketId", senderSocketId);
         io.to(senderSocketId).emit("receive_message_self", data);
       });
     });
@@ -90,7 +126,6 @@ const runSocket = (server: HTTPServer) => {
     });
 
     socket.on("update_order_detail", async (data) => {
-
       const receiverSocketIds = onlineUserList.get(data.seller._id.toString());
       const senderSocketIds = onlineUserList.get(data.buyer._id.toString());
 
@@ -105,7 +140,7 @@ const runSocket = (server: HTTPServer) => {
 
     socket.on("disconnect", () => {
       const userId = getUserBySocketId(socket.id);
-      console.log('user disconnected', userId, socket.id);
+      // console.log("user disconnected", userId, socket.id);
       removeUser(socket.id, userId);
 
       if (!onlineUserList.has(userId)) {
@@ -130,7 +165,7 @@ const runSocket = (server: HTTPServer) => {
 
   const removeUser = async (socketId: string, userId: string) => {
     const set = onlineUserList.get(userId);
-    
+
     if (!set) return;
     set.delete(socketId);
     if (set.size === 0) {
@@ -151,7 +186,7 @@ const runSocket = (server: HTTPServer) => {
   const updateUserLastSeen = async (userId: string) => {
     try {
       let user = await User.findById(userId);
-      // 
+      //
       if (!user) {
         return new ErrorHandler("User not found", 404);
       }
