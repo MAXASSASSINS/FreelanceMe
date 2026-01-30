@@ -189,6 +189,7 @@ export const logoutUser =
         payload: data.success,
       });
       localStorage.setItem("redirectUrl", "/");
+      localStorage.setItem("logout", Date.now().toString());
     } catch (error: any) {
       dispatch({
         type: LOGOUT_USER_FAIL,
