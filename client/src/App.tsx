@@ -47,6 +47,7 @@ import {
   useGlobalLoading,
   useGlobalLoadingText,
 } from "./context/globalLoadingContext";
+import { LOGOUT_USER_SUCCESS } from "./constants/userConstants";
 
 export const windowContext = createContext({ windowWidth: 0, windowHeight: 0 });
 
@@ -82,6 +83,17 @@ const App = () => {
     return () => {
       window.removeEventListener("focus", onFocus);
     };
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "logout") {
+        dispatch({ type: LOGOUT_USER_SUCCESS });
+      }
+    };
+  
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   
 
