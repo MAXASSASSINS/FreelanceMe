@@ -12,13 +12,12 @@ interface AuthTokenPayload extends jwt.JwtPayload {
 
 const runSocket = (server: HTTPServer) => {
   const io = new SocketIOServer(server, {
-    transports: ['websocket'],
+    transports: ["websocket"],
     cors: {
       origin: true,
       credentials: true,
     },
   });
-  
 
   let onlineUserList = new Map();
 
@@ -43,7 +42,7 @@ const runSocket = (server: HTTPServer) => {
 
         // If logged in as DIFFERENT user -> clean up first
         if (socket.user && socket.user.id !== payload.id) {
-          removeUser(socket.user.id, socket.id);
+          removeUserSocket(socket.id, socket.user.id);
         }
 
         socket.user = { id: payload.id };
@@ -57,7 +56,7 @@ const runSocket = (server: HTTPServer) => {
     socket.on("logout", () => {
       console.log("logout event");
       if (socket.user) {
-        removeUser(socket.id, socket.user.id);
+        removeUser(socket.user.id)
         socket.user = undefined;
       }
       console.log(onlineUserList);
@@ -143,7 +142,7 @@ const runSocket = (server: HTTPServer) => {
     socket.on("disconnect", () => {
       const userId = getUserBySocketId(socket.id);
       // console.log("user disconnected", userId, socket.id);
-      removeUser(socket.id, userId);
+      removeUserSocket(userId, socket.id);
 
       if (!onlineUserList.has(userId)) {
         Promise.resolve(updateUserLastSeen(userId)).then(() => {
@@ -165,7 +164,9 @@ const runSocket = (server: HTTPServer) => {
     }
   };
 
-  const removeUser = async (socketId: string, userId: string) => {
+  const removeUserSocket = (socketId: string, userId?: string) => {
+    if(!userId) return;
+
     const set = onlineUserList.get(userId);
 
     if (!set) return;
@@ -176,6 +177,11 @@ const runSocket = (server: HTTPServer) => {
       onlineUserList.set(userId, set);
     }
   };
+
+  const removeUser = (userId?: string) => {
+    if(!userId) return;
+    onlineUserList.delete(userId);
+  }
 
   const getUserBySocketId = (socketId: string) => {
     for (let [key, value] of onlineUserList.entries()) {
