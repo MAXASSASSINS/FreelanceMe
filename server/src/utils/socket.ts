@@ -27,7 +27,6 @@ const runSocket = (server: HTTPServer) => {
     socket.user = undefined;
 
     socket.on("login", (token: string) => {
-      if (socket.user) return;
       console.log("login event");
       try {
         const payload = jwt.verify(
@@ -37,6 +36,14 @@ const runSocket = (server: HTTPServer) => {
 
         if (!payload.id) {
           throw new Error("Invalid token payload");
+        }
+
+        // If already logged in as SAME user -> ignore
+        if (socket.user?.id === payload.id) return;
+
+        // If logged in as DIFFERENT user -> clean up first
+        if (socket.user && socket.user.id !== payload.id) {
+          removeUser(socket.user.id, socket.id);
         }
 
         socket.user = { id: payload.id };
@@ -54,11 +61,6 @@ const runSocket = (server: HTTPServer) => {
         socket.user = undefined;
       }
       console.log(onlineUserList);
-    });
-
-    socket.on("new_user", (userId) => {
-      console.log("new user connected", userId, socket.id);
-      addNewUser(userId, socket.id);
     });
 
     socket.on("join_room", (data) => {
