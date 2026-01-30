@@ -48,6 +48,7 @@ import {
   useGlobalLoadingText,
 } from "./context/globalLoadingContext";
 import { LOGOUT_USER_SUCCESS } from "./constants/userConstants";
+import { useAuthSync } from "./hooks/useAuthSync";
 
 export const windowContext = createContext({ windowWidth: 0, windowHeight: 0 });
 
@@ -71,31 +72,7 @@ const App = () => {
   const pageheight = window.innerHeight;
   height = Math.max(pageheight, height);
 
-  useEffect(() => {
-    dispatch(loadUser());
-  }, []);
-
-  useEffect(() => {
-    const onFocus = () => {
-      dispatch(loadUser(true));
-    };
-    window.addEventListener("focus", onFocus);
-    return () => {
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "logout") {
-        dispatch({ type: LOGOUT_USER_SUCCESS });
-      }
-    };
-  
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-  
+  useAuthSync()
 
   useEffect(() => {
     let resizeWindow = () => {
