@@ -56,6 +56,7 @@ export const GigDetail = () => {
   }, [dispatch, params.id]);
 
   const { gigDetail } = useSelector((state: RootState) => state.gigDetail);
+  const gigUser = gigDetail?.user as IUser
   const { user } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
@@ -160,7 +161,7 @@ export const GigDetail = () => {
 
   const checkUserOpenItsOwnGig = () => {
     if (user && gigDetail) {
-      return user._id === (gigDetail.user as IUser)._id;
+      return user._id === (gigUser as IUser)._id;
     }
     return false;
   };
@@ -180,8 +181,6 @@ export const GigDetail = () => {
   if (!gigDetail) {
     return <div>Loading...</div>;
   }
-
-  gigDetail.user = gigDetail.user as IUser;
 
   return gigDetail ? (
     <>
@@ -214,16 +213,16 @@ export const GigDetail = () => {
             <h1 className="gig-details-gig-title">{gigDetail.title}</h1>
             <div className="gig-seller-overview">
               <Avatar
-                avatarUrl={gigDetail.user.avatar.url}
-                userName={gigDetail.user.name}
+                avatarUrl={gigUser.avatar.url}
+                userName={gigUser.name}
                 width="1.875rem"
-                alt={gigDetail.user.name}
+                alt={gigUser.name}
                 fontSize="1rem"
               />
 
               <a href="#gig-owner-details-id">
                 <div className="gig-seller-overview-seller-name">
-                  {gigDetail.user.name}
+                  {gigUser.name}
                 </div>
               </a>
               <a href="#review-container">
@@ -340,30 +339,30 @@ export const GigDetail = () => {
             </header>
             <div className="gig-owner-profile-info-wrapper">
               <Avatar
-                avatarUrl={gigDetail.user.avatar.url}
-                userName={gigDetail.user.name}
+                avatarUrl={gigUser.avatar.url}
+                userName={gigUser.name}
                 width="3rem"
-                alt={gigDetail.user.name}
+                alt={gigUser.name}
                 fontSize="1.5rem"
               />
-              {/* <img src={gigDetail.user.avatar.url}></img> */}
+              {/* <img src={gigUser.avatar.url}></img> */}
               <div className="gig-owner-profile-info">
-                <Link to={`/user/${gigDetail.user._id}`}>
-                  <div className="gig-owner-name">{gigDetail.user.name}</div>
+                <Link to={`/user/${gigUser._id}`}>
+                  <div className="gig-owner-name">{gigUser.name}</div>
                 </Link>
                 <div className="gig-owner-tagline">
-                  {gigDetail.user.tagline}
+                  {gigUser.tagline}
                 </div>
                 <div className="gig-owner-rating-div">
                   <div>
-                    <RatingStars rating={gigDetail.user.ratings}></RatingStars>
+                    <RatingStars rating={gigUser.ratings}></RatingStars>
                   </div>
                   &nbsp;
                   <div className="gig-owner-rating">
-                    {gigDetail.user.ratings.toFixed(1)}
+                    {gigUser.ratings.toFixed(1)}
                   </div>
                   &nbsp;
-                  <div>({gigDetail.user.numOfRatings})</div>
+                  <div>({gigUser.numOfRatings})</div>
                 </div>
               </div>
             </div>
@@ -373,21 +372,21 @@ export const GigDetail = () => {
                 <ul>
                   <li>
                     From
-                    <div>{gigDetail.user.country}</div>
+                    <div>{gigUser.country}</div>
                   </li>
                   <li>
                     Member since
                     <div>
                       <Moment format="MMM YYYY">
-                        {gigDetail.user.userSince}
+                        {gigUser.userSince}
                       </Moment>
                     </div>
                   </li>
                   <li>
                     Last delivery
                     <div>
-                      {gigDetail.user.lastDelivery ? (
-                        <Moment fromNow>{gigDetail.user.lastDelivery}</Moment>
+                      {gigUser.lastDelivery ? (
+                        <Moment fromNow>{gigUser.lastDelivery}</Moment>
                       ) : (
                         "---"
                       )}
@@ -396,7 +395,7 @@ export const GigDetail = () => {
                 </ul>
               </div>
               <div className="gig-owner-decription">
-                {gigDetail.user.description}
+                {gigUser.description}
               </div>
             </div>
           </div>
