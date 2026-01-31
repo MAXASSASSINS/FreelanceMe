@@ -44,7 +44,7 @@ const SocketContextProvider = ({ children }: SocketContextProviderProps) => {
     return () => {
       socket.off("connect", handleConnect);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     // console.log("isAuthenticated", isAuthenticated)
