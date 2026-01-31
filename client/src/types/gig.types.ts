@@ -1,9 +1,9 @@
 import { QuestionType } from "./../constants/globalConstants";
 import { IFile } from "./file.types";
-import { IUser } from "./user.types";
+import { IUser, IUserLite } from "./user.types";
 
 export interface IReview {
-  user: IUser | string;
+  user: IUserLite;
   name: string;
   avatar: IFile,
   country: string;
@@ -45,7 +45,7 @@ export interface IGig {
   numOfReviews: number;
   reviews: IReview[];
   createdAt?: Date;
-  user: IUser | string;
+  user: IUserLite | IUser;
   active?: boolean;
   requirements: IGigRequirement[];
 }
