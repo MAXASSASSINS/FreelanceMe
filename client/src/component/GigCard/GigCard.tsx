@@ -12,7 +12,6 @@ import "./gigCard.css";
 import { toast } from "react-toastify";
 import { RootState } from "../../store";
 import { IGig } from "../../types/gig.types";
-import { IUser } from "../../types/user.types";
 import { debounce } from "@mui/material";
 
 type GigCardProps = {
@@ -63,8 +62,6 @@ export const GigCard = ({ gig, lazyLoad = false }: GigCardProps) => {
 
   const debouncedUpdateFavourite = debounce(handleUpdateFavourite, 300);
 
-  gig.user = gig.user as IUser;
-
   return (
     <div className="gig-card">
       <div className="container-wrapper">
@@ -77,6 +74,7 @@ export const GigCard = ({ gig, lazyLoad = false }: GigCardProps) => {
             alt="user avatar"
             width="2rem"
             userName={gig.user.name}
+            onlineStatus={gig.user.isOnline}
           />
           <Link to={`/user/${gig.user._id}`}>
             <div className="gig-user-name">{gig.user.name}</div>
