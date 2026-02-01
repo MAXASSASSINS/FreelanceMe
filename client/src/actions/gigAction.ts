@@ -10,12 +10,14 @@ import {
   GIG_DETAIL_REQUEST,
   GIG_DETAIL_SUCCESS,
   UPDATE_ALL_GIGS_SUCCESS,
+  UPDATE_GIG_USERS_ONLINE_STATUS,
   USER_GIGS_FAIL,
   USER_GIGS_REQUEST,
   USER_GIGS_SUCCESS
 } from "../constants/gigConstants";
 import { IGig } from "../types/gig.types";
 import { axiosInstance } from "../utility/axiosInstance";
+import { ONLINE_STATUS } from "../types/miscellaneous.types";
 
 export const getAllGig = (keywords?: string, category?: string) => async (dispatch: Dispatch<AnyAction>) => {
   try {
@@ -109,6 +111,13 @@ export const updateAllGigs = (data: IGig[]) => async (dispatch: Dispatch<AnyActi
   dispatch({
     type: UPDATE_ALL_GIGS_SUCCESS,
     payload: data,
+  });
+};
+
+export const updateGigUsersOnlineStatus = (onlineStatus: ONLINE_STATUS[]) => async (dispatch: Dispatch<AnyAction>) => {
+  dispatch({
+    type: UPDATE_GIG_USERS_ONLINE_STATUS,
+    payload: onlineStatus,
   });
 };
 
