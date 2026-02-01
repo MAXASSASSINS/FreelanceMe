@@ -22,7 +22,6 @@ const runSocket = (server: HTTPServer) => {
   let onlineUserList = new Map();
 
   io.on("connection", (socket: CustomSocket) => {
-    console.log("socket connection event");
     socket.user = undefined;
 
     socket.on("login", (token: string) => {
@@ -37,6 +36,10 @@ const runSocket = (server: HTTPServer) => {
           throw new Error("Invalid token payload");
         }
 
+        if(socket.user){
+          io.emit("online_from_server", socket.user.id);
+        }
+
         // If already logged in as SAME user -> ignore
         if (socket.user?.id === payload.id) return;
 
@@ -46,6 +49,8 @@ const runSocket = (server: HTTPServer) => {
         }
 
         socket.user = { id: payload.id };
+
+        io.emit("online_from_server", socket.user.id);
         addNewUser(payload.id, socket.id);
         console.log(onlineUserList);
       } catch {
@@ -55,11 +60,22 @@ const runSocket = (server: HTTPServer) => {
 
     socket.on("logout", () => {
       console.log("logout event");
+      const userId = socket.user?.id
       if (socket.user) {
-        removeUser(socket.user.id)
+        removeUser(socket.user.id);
         socket.user = undefined;
       }
+      if (userId) io.emit("offline_from_server", userId)      
       console.log(onlineUserList);
+    });
+    let i = 0
+    socket.on("get_users_online_status", (userIds: String[]) => {
+      // console.log(i++)
+      const onlineStatusList = userIds.map((userId) => ({
+        userId,
+        isOnline: onlineUserList.has(userId),
+      }));
+      socket.emit("online_user_snapshot", onlineStatusList);
     });
 
     socket.on("join_room", (data) => {
@@ -104,12 +120,6 @@ const runSocket = (server: HTTPServer) => {
         online,
       };
       socket.emit("is_online_from_server", newData);
-    });
-
-    socket.on("online", async (userId) => {
-      if (userId) {
-        io.emit("online_from_server", userId);
-      }
     });
 
     socket.on("get_online_status_of_all_clients", async (list) => {
@@ -165,7 +175,7 @@ const runSocket = (server: HTTPServer) => {
   };
 
   const removeUserSocket = (socketId: string, userId?: string) => {
-    if(!userId) return;
+    if (!userId) return;
 
     const set = onlineUserList.get(userId);
 
@@ -179,9 +189,9 @@ const runSocket = (server: HTTPServer) => {
   };
 
   const removeUser = (userId?: string) => {
-    if(!userId) return;
+    if (!userId) return;
     onlineUserList.delete(userId);
-  }
+  };
 
   const getUserBySocketId = (socketId: string) => {
     for (let [key, value] of onlineUserList.entries()) {
