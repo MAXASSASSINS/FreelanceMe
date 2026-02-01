@@ -84,37 +84,6 @@ const App = () => {
     return () => window.removeEventListener("resize", resizeWindow);
   }, []);
 
-  // useEffect(() => {
-  //   const handleNewUser = () => {
-  //     console.log("handle new user is called");
-  //     if (isAuthenticated && user?._id) {
-  //       socket.emit("new_user", user._id.toString());
-  //     }
-  //   };
-
-  //   // Emit on connect
-  //   socket.on("connect", handleNewUser);
-
-  //   if (isAuthenticated && user?._id) {
-  //     socket.emit("new_user", user._id.toString());
-  //   }
-
-  //   // Clean up
-  //   return () => {
-  //     socket.off("connect", handleNewUser);
-  //   };
-  // }, [isAuthenticated, user, userLoading]);
-
-  // // SHOW ONLINE STATUS OF THE USER
-  // useEffect(() => {
-  //   socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-  //   const interval = setInterval(() => {
-  //     socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-  //   }, 10000);
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [user, isAuthenticated]);
 
   // List of paths where footer will be hidden
   const pathsWithoutFooter = [
