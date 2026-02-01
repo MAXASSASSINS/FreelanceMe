@@ -1,30 +1,26 @@
-import { useContext, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllGig } from "../../actions/gigAction";
+import { getAllGig, updateGigUsersOnlineStatus } from "../../actions/gigAction";
 import "../../component/common.css";
 import { GigCard } from "../GigCard/GigCard";
 import "./home.css";
 import { useLocation } from "react-router-dom";
-// import { socket } from '../../App'
-import { updateAllGigs } from "../../actions/gigAction";
-import { SocketContext } from "../../context/socket/socket";
 import { SearchTagsBar } from "../SearchTagsBar";
 import { AppDispatch, RootState } from "../../store";
-import { IUser } from "../../types/user.types";
+import { useSocket } from "../../context/socketContext";
+import { ONLINE_STATUS } from "../../types/miscellaneous.types";
 
 export const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
   let location = useLocation();
 
-  const socket = useContext(SocketContext);
+  const socket = useSocket();
 
-  let { gigLoading, gigs } = useSelector(
-    (state: RootState) => state.gigs
-  );
+  let { gigLoading, gigs } = useSelector((state: RootState) => state.gigs);
 
   useEffect(() => {
     let path = location.pathname;
-    
+
     let params = new URLSearchParams(location.search);
     let category = "";
     let keywords = "";
@@ -44,59 +40,54 @@ export const Home = () => {
     } else {
       dispatch(getAllGig());
     }
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, dispatch]);
 
+  // memoizing gig users ids key to prevent infinite fetch
+  const gigUserIdsKey = useMemo(() => {
+    if (!gigs || gigs.length === 0) return "";
+    return Array.from(new Set(gigs.map((gig) => gig.user._id)))
+      .sort()
+      .join(",");
+  }, [gigs]);
+
+  // emit event to fetch online status of gig's user
   useEffect(() => {
-    dispatch(getAllGig());
-  }, [dispatch]);
+    if (!gigUserIdsKey) return;
+    socket.emit("get_users_online_status", gigUserIdsKey.split(","));
+  }, [gigUserIdsKey]);
 
-  // SHOW ONLINE STATUS OF THE USER
-  // useEffect(() => {
-  //   socket.emit("online", isAuthenticated ? user._id.toString() : null);
-  //   const interval = setInterval(() => {
-  //     socket.emit("online", isAuthenticated ? user._id.toString() : null);
-  //   }, [10000]);
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [user, isAuthenticated]);
-
-  // Tracking the online status of the gigs listed in the home page
+  // update online status
   useEffect(() => {
-    socket.on("online_from_server", async (userId) => {
-      if (gigs) {
-        const temp = gigs.map((gig) => {
-          gig.user = gig.user as IUser;
-          if (gig.user._id.toString() === userId.toString()) {
-            return { ...gig, user: { ...gig.user, online: true } };
-          }
-          return gig;
-        });
-        dispatch(updateAllGigs(temp));
-      }
-    });
+    const handler = (onlineStatusList: ONLINE_STATUS[]) => {
+      dispatch(updateGigUsersOnlineStatus(onlineStatusList));
+    };
 
-    socket.on("offline_from_server", async (userId) => {
-      //
-      if (gigs) {
-        const temp = gigs.map((gig) => {
-          gig.user = gig.user as IUser;
-          if (gig.user._id.toString() === userId.toString()) {
-            return { ...gig, user: { ...gig.user, online: false } };
-          }
-          return gig;
-        });
-        dispatch(updateAllGigs(temp));
-      }
-    });
+    socket.on("online_user_snapshot", handler);
+    return () => {
+      socket.off("online_user_snapshot", handler);
+    };
+  }, [dispatch, socket]);
+
+  // Updating online | offline status of a particular user
+  useEffect(() => {
+    const onlineHandler = (userId: string) => {
+      console.log("online from server")
+      dispatch(updateGigUsersOnlineStatus([{ userId, isOnline: true }]));
+    };
+
+    const offlineHandler = (userId: string) => {
+      console.log("offline from server")
+      dispatch(updateGigUsersOnlineStatus([{ userId, isOnline: false }]));
+    };
+
+    socket.on("online_from_server", onlineHandler);
+    socket.on("offline_from_server", offlineHandler);
 
     return () => {
-      socket.off("online_from_server");
-      socket.off("offline_from_server");
+      socket.off("online_from_server", onlineHandler);
+      socket.off("offline_from_server", offlineHandler);
     };
-  }, [socket, gigs, dispatch]);
-
-  useEffect(() => {}, [gigs]);
+  }, [dispatch, socket]);
 
   // LAZY LOADING THE IMAGES AND VIDEOS
   useEffect(() => {
@@ -131,15 +122,16 @@ export const Home = () => {
     });
   }, [gigs]);
 
+  // console.log(gigs.map(gig => gig.user))
+
   return (
     <div className="min-h-[calc(100vh-146.5px)] sm:min-h-[calc(100vh-81px)] mb-8">
       <SearchTagsBar />
-      {gigs?.length && gigs.length > 0 ? (
+      {gigs.length > 0 ? (
         <div className="all-gigs-container">
-          {gigs &&
-            gigs.map((gig) => (
-              <GigCard lazyLoad={true} gig={gig} key={gig._id} />
-            ))}
+          {gigs.map((gig) => (
+            <GigCard lazyLoad={true} gig={gig} key={gig._id} />
+          ))}
         </div>
       ) : (
         !gigLoading && (
