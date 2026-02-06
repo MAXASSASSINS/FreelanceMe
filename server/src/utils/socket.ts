@@ -6,6 +6,7 @@ import { log } from "console";
 import jwt from "jsonwebtoken";
 
 type CustomSocket = Socket & { user?: { id: string } };
+type AuthSocket = Socket & { user: { id: string } };
 interface AuthTokenPayload extends jwt.JwtPayload {
   id: string;
 }
@@ -83,9 +84,8 @@ const runSocket = (server: HTTPServer) => {
       if (userId) io.emit("offline_from_server", userId)      
       console.log(onlineUserList);
     });
-    let i = 0
+
     socket.on("get_users_online_status", (userIds: String[]) => {
-      // console.log(i++)
       const onlineStatusList = userIds.map((userId) => ({
         userId,
         isOnline: onlineUserList.has(userId),
@@ -93,9 +93,11 @@ const runSocket = (server: HTTPServer) => {
       socket.emit("online_user_snapshot", onlineStatusList);
     });
 
-    socket.on("join_room", (data) => {
-      socket.join(data);
-    });
+    socket.on("join_room", requireAuth((socket, receiverUserId) => {
+      const senderUserId = socket.user.id
+      const roomId = getRoomId(senderUserId, receiverUserId);
+      socket.join(roomId) 
+    }));
 
     socket.on("send_message", async (data) => {
       const { sender, receiver } = data;
@@ -237,18 +239,17 @@ const runSocket = (server: HTTPServer) => {
     }
   };
 
-  const joinRoom = async (senderId: string, receiverId: string) => {
-    const r = await createRoom(senderId, receiverId);
-    // socket.join(r);
+  const requireAuth =
+  (handler: (socket: AuthSocket, ...args: any[]) => void) =>
+  (socket: CustomSocket, ...args: any[]) => {
+    if (!socket.user) return;
+    handler(socket as AuthSocket, ...args);
   };
 
-  const createRoom = async (senderId: string, receiverId: string) => {
-    if (senderId.toString() > receiverId.toString()) {
-      return senderId.toString() + "|" + receiverId.toString();
-    } else {
-      return receiverId.toString() + "|" + senderId.toString();
-    }
-  };
+  
+  const getRoomId = (userId1: String, userId2: String) => {
+    return userId1 + "__" + userId2;
+  }
 };
 
 export default runSocket;
