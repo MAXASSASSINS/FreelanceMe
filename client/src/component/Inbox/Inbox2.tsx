@@ -35,7 +35,6 @@ import {
 } from "./inboxReducer";
 
 import { HiDownload } from "react-icons/hi";
-import { SocketContext } from "../../context/socket/socket";
 import { uploadToCloudinaryV2 } from "../../utility/cloudinary";
 import { downloadFile, getFileSize } from "../../utility/util";
 
@@ -51,6 +50,7 @@ import { LazyVideo } from "../LazyVideo.js/LazyVideo";
 import { RootState } from "../../store";
 import { IUser } from "../../types/user.types";
 import { IFile } from "../../types/file.types";
+import { useSocket } from "../../context/socketContext";
 
 type SelectedFile = {
   selectedFile: File;
@@ -59,7 +59,7 @@ type SelectedFile = {
 
 export const Inbox = () => {
   const { windowWidth } = useContext(windowContext);
-  const socket = useContext(SocketContext);
+  const socket = useSocket()
 
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
