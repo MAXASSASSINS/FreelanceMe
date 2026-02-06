@@ -21,6 +21,21 @@ const runSocket = (server: HTTPServer) => {
 
   let onlineUserList = new Map();
 
+  // handling idle connections cleanup
+  setInterval(() => {
+    for (const [userId, socketSet] of onlineUserList.entries()) {
+      for (const socketId of socketSet) {
+        if (!io.sockets.sockets.has(socketId)) {
+          socketSet.delete(socketId);
+        }
+      }
+  
+      if (socketSet.size === 0) {
+        onlineUserList.delete(userId);
+      }
+    }
+  }, 60_000);  
+
   io.on("connection", (socket: CustomSocket) => {
     socket.user = undefined;
 
