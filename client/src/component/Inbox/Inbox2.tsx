@@ -51,6 +51,7 @@ import { RootState } from "../../store";
 import { IUser } from "../../types/user.types";
 import { IFile } from "../../types/file.types";
 import { useSocket } from "../../context/socketContext";
+import { useTypingStatus } from "../../hooks/useTypingStatus";
 
 type SelectedFile = {
   selectedFile: File;
@@ -323,65 +324,7 @@ export const Inbox = () => {
   }, [inboxMessages?.length, fileLoading]);
 
   // SHOW TYPING STATUS
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isTypingRef = useRef(false);
-
-  useEffect(() => {
-    if (!currentSelectedClient) return;
-    if (!message) return;
-
-    const receiverUserId = currentSelectedClient._id.toString();
-
-    // emit ONLY once
-    if (!isTypingRef.current) {
-      socket.emit("typing_started", receiverUserId);
-      isTypingRef.current = true;
-    }
-
-    // reset stop timer
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("typing_stopped", receiverUserId);
-      isTypingRef.current = false;
-    }, 2000);
-
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, [message, currentSelectedClient]);
-
-  useEffect(() => {
-    const handleTypingStarted = (senderUserId: string) => {
-      if (
-        currentSelectedClient &&
-        currentSelectedClient._id.toString() === senderUserId
-      ) {
-        setTyping(true);
-      }
-    };
-
-    const handleTypingStopped = (senderUserId: string) => {
-      if (
-        currentSelectedClient &&
-        currentSelectedClient._id.toString() === senderUserId
-      ) {
-        setTyping(false);
-      }
-    };
-
-    socket.on("typing_started_from_server", handleTypingStarted);
-    socket.on("typing_stopped_from_server", handleTypingStopped);
-
-    return () => {
-      socket.off("typing_started_from_server", handleTypingStarted);
-      socket.off("typing_stopped_from_server", handleTypingStopped);
-    };
-  }, [socket, currentSelectedClient]);
+  useTypingStatus(currentSelectedClient, message, setTyping)
 
   // SHOW ONLINE STATUS OF ALL CLIENTS + CURRENTLY SELECTED CLIENT
   useEffect(() => {
