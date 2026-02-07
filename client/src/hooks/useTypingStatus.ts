@@ -19,6 +19,14 @@ export const useTypingStatus = (
   useEffect(() => {
     if (!receiver) return;
 
+    if (!message) {
+      if (isTypingRef.current) {
+        socket.emit("typing_stopped", receiver._id.toString());
+        isTypingRef.current = false;
+      }
+      return;
+    }
+
     const receiverUserId = receiver._id.toString();
 
     if (!isTypingRef.current) {
