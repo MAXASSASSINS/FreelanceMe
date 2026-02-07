@@ -4,6 +4,7 @@ import ErrorHandler from "./errorHandler";
 import { Server as HTTPServer } from "http";
 import { log } from "console";
 import jwt from "jsonwebtoken";
+import { arch } from "os";
 
 type CustomSocket = Socket & { user?: { id: string } };
 type AuthSocket = Socket & { user: { id: string } };
@@ -30,12 +31,12 @@ const runSocket = (server: HTTPServer) => {
           socketSet.delete(socketId);
         }
       }
-  
+
       if (socketSet.size === 0) {
         onlineUserList.delete(userId);
       }
     }
-  }, 60_000);  
+  }, 60_000);
 
   io.on("connection", (socket: CustomSocket) => {
     socket.user = undefined;
@@ -52,7 +53,7 @@ const runSocket = (server: HTTPServer) => {
           throw new Error("Invalid token payload");
         }
 
-        if(socket.user){
+        if (socket.user) {
           io.emit("online_from_server", socket.user.id);
         }
 
@@ -69,6 +70,8 @@ const runSocket = (server: HTTPServer) => {
         io.emit("online_from_server", socket.user.id);
         addNewUser(payload.id, socket.id);
         console.log(onlineUserList);
+        const roomId = getUserRoomId(socket.user.id);
+        socket.join(roomId)
       } catch {
         socket.disconnect();
       }
@@ -76,12 +79,12 @@ const runSocket = (server: HTTPServer) => {
 
     socket.on("logout", () => {
       console.log("logout event");
-      const userId = socket.user?.id
+      const userId = socket.user?.id;
       if (socket.user) {
         removeUser(socket.user.id);
         socket.user = undefined;
       }
-      if (userId) io.emit("offline_from_server", userId)      
+      if (userId) io.emit("offline_from_server", userId);
       console.log(onlineUserList);
     });
 
@@ -93,11 +96,15 @@ const runSocket = (server: HTTPServer) => {
       socket.emit("online_user_snapshot", onlineStatusList);
     });
 
-    socket.on("join_room", requireAuth((socket, receiverUserId) => {
-      const senderUserId = socket.user.id
-      const roomId = getRoomId(senderUserId, receiverUserId);
-      socket.join(roomId) 
-    }));
+    socket.on(
+      "join_room",
+      requireAuth(socket, (authSocket, receiverUserId) => {
+        const senderId = authSocket.user.id;
+        const roomId = getRoomId(senderId, receiverUserId);
+        console.log("joined room", roomId)
+        authSocket.join(roomId);
+      })
+    );
 
     socket.on("send_message", async (data) => {
       const { sender, receiver } = data;
@@ -115,20 +122,21 @@ const runSocket = (server: HTTPServer) => {
       });
     });
 
-    socket.on("typing_started", (data) => {
-      const receiverSocketIds = onlineUserList.get(data.receiverId);
+    socket.on(
+      "typing_started",
+      requireAuth(socket, (authSocket, receiverUserId) => {
+        const roomId = getUserRoomId(receiverUserId)
+        authSocket.to(roomId).emit("typing_started_from_server", authSocket.user.id);
+      })
+    );
 
-      receiverSocketIds?.forEach((receiverSocketId: string) => {
-        socket.to(receiverSocketId).emit("typing_started_from_server", data);
-      });
-    });
-    socket.on("typing_stopped", (data) => {
-      const receiverSocketIds = onlineUserList.get(data.receiverId);
-
-      receiverSocketIds?.forEach((receiverSocketId: string) => {
-        socket.to(receiverSocketId).emit("typing_stopped_from_server", data);
-      });
-    });
+    socket.on(
+      "typing_stopped",
+      requireAuth(socket, (authSocket, receiverUserId) => {
+        const roomId = getUserRoomId(receiverUserId)
+        authSocket.to(roomId).emit("typing_stopped_from_server", authSocket.user.id);
+      })
+    );
 
     socket.on("is_online", (clientId) => {
       const online = onlineUserList.has(clientId);
@@ -240,15 +248,23 @@ const runSocket = (server: HTTPServer) => {
   };
 
   const requireAuth =
-  (handler: (socket: AuthSocket, ...args: any[]) => void) =>
-  (socket: CustomSocket, ...args: any[]) => {
-    if (!socket.user) return;
-    handler(socket as AuthSocket, ...args);
+    (
+      socket: CustomSocket,
+      handler: (socket: AuthSocket, ...args: any[]) => void
+    ) =>
+    (...args: any[]) => {
+      if (!socket.user) return;
+      handler(socket as AuthSocket, ...args);
+    };
+
+  const getRoomId = (userId1: String, userId2: String) => {
+    if (userId1 < userId2) return userId1 + "__" + userId2;
+    return userId2 + "__" + userId1;
   };
 
-  
-  const getRoomId = (userId1: String, userId2: String) => {
-    return userId1 + "__" + userId2;
+  const getUserRoomId = (userId: String) => {
+    const roomId = "userId:" + userId;
+    return roomId;
   }
 };
 
