@@ -59,7 +59,7 @@ type SelectedFile = {
 
 export const Inbox = () => {
   const { windowWidth } = useContext(windowContext);
-  const socket = useSocket()
+  const socket = useSocket();
 
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
@@ -142,7 +142,7 @@ export const Inbox = () => {
 
   const getInitialInboxMessages = async () => {
     const { data } = await axiosInstance.get("/get/initial/messages");
-    console.log(data);
+    // console.log(data);
     dispatch({ type: FETCH_ALL_CLIENTS_LIST, payload: data.inboxClients });
     dispatch({
       type: FETCH_ALL_CLIENTS_DETAILS,
@@ -323,37 +323,63 @@ export const Inbox = () => {
   }, [inboxMessages?.length, fileLoading]);
 
   // SHOW TYPING STATUS
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
+
   useEffect(() => {
-    const data = {
-      senderId: user!._id.toString(),
-      receiverId: currentSelectedClient?._id.toString(),
-    };
-    socket.emit("typing_started", data);
-    const timeout = setTimeout(() => {
-      socket.emit("typing_stopped", data);
-    }, 1000);
+    if (!currentSelectedClient) return;
+    if (!message) return;
+
+    const receiverUserId = currentSelectedClient._id.toString();
+
+    // emit ONLY once
+    if (!isTypingRef.current) {
+      socket.emit("typing_started", receiverUserId);
+      isTypingRef.current = true;
+    }
+
+    // reset stop timer
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing_stopped", receiverUserId);
+      isTypingRef.current = false;
+    }, 2000);
 
     return () => {
-      clearTimeout(timeout);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
-  }, [message]);
+  }, [message, currentSelectedClient]);
 
   useEffect(() => {
-    socket.on("typing_started_from_server", (data) => {
+    const handleTypingStarted = (senderUserId: string) => {
       if (
         currentSelectedClient &&
-        currentSelectedClient._id.toString() === data.senderId.toString()
+        currentSelectedClient._id.toString() === senderUserId
       ) {
         setTyping(true);
       }
-    });
-    socket.on("typing_stopped_from_server", (data) => {
-      setTyping(false);
-    });
+    };
+
+    const handleTypingStopped = (senderUserId: string) => {
+      if (
+        currentSelectedClient &&
+        currentSelectedClient._id.toString() === senderUserId
+      ) {
+        setTyping(false);
+      }
+    };
+
+    socket.on("typing_started_from_server", handleTypingStarted);
+    socket.on("typing_stopped_from_server", handleTypingStopped);
 
     return () => {
-      socket.off("typing_started_from_server");
-      socket.off("typing_stopped_from_server");
+      socket.off("typing_started_from_server", handleTypingStarted);
+      socket.off("typing_stopped_from_server", handleTypingStopped);
     };
   }, [socket, currentSelectedClient]);
 
@@ -554,6 +580,8 @@ export const Inbox = () => {
   }, [windowWidth]);
 
   const handleClientSelectionClick = async (detail: IUser) => {
+    console.log("handliing client selection click");
+    socket.emit("join_room", detail._id);
     if (currentSelectedClient?._id.toString() !== detail._id.toString()) {
       setIsFilePicked(false);
       setSelectedFiles([]);
@@ -580,8 +608,6 @@ export const Inbox = () => {
       window.removeEventListener("click", handleClickOutside);
     };
   }, []);
-
-  console.log('render');
 
   return (
     <div className="inbox-main">
