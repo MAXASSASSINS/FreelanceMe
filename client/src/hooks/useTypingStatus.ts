@@ -1,16 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useSocket } from "../context/socketContext";
-import { IUser } from "../types/user.types";
+import { IUser, IUserLite } from "../types/user.types";
 
 export const useTypingStatus = (
-  receiver: IUser | null,
+  receiver: IUserLite | null,
   message: String,
   onTypingChange: (isTyping: boolean) => void
 ) => {
   const socket = useSocket();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
-  const receiverRef = useRef<IUser | null>(receiver)
+  const receiverRef = useRef<IUserLite | null>(receiver)
 
   useEffect(() => {
     receiverRef.current = receiver
@@ -18,7 +18,6 @@ export const useTypingStatus = (
 
   useEffect(() => {
     if (!receiver) return;
-    if (!message) return;
 
     const receiverUserId = receiver._id.toString();
 
