@@ -24,9 +24,11 @@ import {
   FETCH_ALL_CLIENTS_DETAILS,
   FETCH_ALL_CLIENTS_LAST_MESSAGE,
   FETCH_ALL_CLIENTS_LIST,
-  UPDATE_ALL_CHATS_WITH_CLIENT,
-  UPDATE_CLIENT_LAST_MESSAGE,
+  SOCKET_MESSAGE_RECEIVED,
+  UPDATE_CURRENTLY_SELECTED_CLIENT,
+  UPDATE_CURRENTLY_SELECTED_CLIENT_ONLINE,
   UPDATE_ONLINE_STATUS_OF_CLIENTS,
+  USER_ONLINE,
 } from "./inboxConstant";
 import {
   INBOX_DETAILS_INITIAL_STATE,
@@ -48,10 +50,11 @@ import { DataSendingLoading } from "../DataSendingLoading/DataSendingLoading";
 import { LazyImage } from "../LazyImage/LazyImage";
 import { LazyVideo } from "../LazyVideo.js/LazyVideo";
 import { RootState } from "../../store";
-import { IUser } from "../../types/user.types";
+import { IUser, IUserLite } from "../../types/user.types";
 import { IFile } from "../../types/file.types";
 import { useSocket } from "../../context/socketContext";
 import { useTypingStatus } from "../../hooks/useTypingStatus";
+import { IMessage } from "../../types/message.types";
 
 type SelectedFile = {
   selectedFile: File;
@@ -65,6 +68,11 @@ export const Inbox = () => {
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
+  const userRef = useRef<IUser | null>(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const [search, setSearch] = useState("");
   const [searchList, setSearchList] = useState<string[]>([]);
@@ -99,7 +107,15 @@ export const Inbox = () => {
     allClientUserLastMessage,
     allClientsDetails,
     onlineStatusOfClients,
+    currentSelectedClient,
+    currentSelectedClientOnline,
   }: InboxMessageState = inboxDetails;
+
+  const inboxDetailsRef = useRef<InboxMessageState>(inboxDetails);
+
+  useEffect(() => {
+    inboxDetailsRef.current = inboxDetails;
+  }, [inboxDetails]);
 
   const [inboxMessagesLoading, setInboxMessagesLoading] = useState(false);
 
@@ -112,10 +128,8 @@ export const Inbox = () => {
   const [showMessageListOnDevices, setShowMessageListOnDevices] =
     useState(true);
 
-  const [currentSelectedClient, setCurrentSelectedClient] =
-    useState<IUser | null>(null);
-  const [currentSelectedClientOnline, setCurrentSelectedClientOnline] =
-    useState(false);
+  // const [currentSelectedClientOnline, setCurrentSelectedClientOnline] =
+  //   useState(false);
 
   const [message, setMessage] = useState("");
   const [isFilePicked, setIsFilePicked] = useState(false);
@@ -233,14 +247,16 @@ export const Inbox = () => {
       files = await sendFileClientCloudinary(selectedFiles);
 
       // add message to database
-      const res = await addMessageToDatabase(message, files);
+      const data = await addMessageToDatabase(message, files);
+      console.log(data);
 
       // send message to socket
-      await handleSendMessageSocket(message, files);
+      handleSendMessageSocket(data.messageData);
     } catch (error) {
       console.log(error);
     } finally {
       setFileLoading(false);
+      setTyping(false);
     }
   };
 
@@ -285,30 +301,8 @@ export const Inbox = () => {
     }
   };
 
-  const handleSendMessageSocket = async (message: string, files: IFile[]) => {
-    const sender = {
-      avatar: user!.avatar,
-      name: user!.name,
-      _id: user!._id,
-    };
-    const receiver = {
-      avatar: currentSelectedClient?.avatar,
-      name: currentSelectedClient?.name,
-      _id: currentSelectedClient?._id,
-    };
-
-    if (receiver._id !== currentSelectedClient?._id) return;
-
-    const messageData = {
-      message: {
-        text: message,
-      },
-      sender,
-      receiver,
-      createdAt: new Date().getTime(),
-      files,
-    };
-    await socket.emit("send_message", messageData);
+  const handleSendMessageSocket = (messageData: IMessage) => {
+    socket.emit("send_message", messageData);
   };
 
   // MESSAGE SCROLL DOWN TO BOTTOM EFFECT
@@ -324,7 +318,7 @@ export const Inbox = () => {
   }, [inboxMessages?.length, fileLoading]);
 
   // SHOW TYPING STATUS
-  useTypingStatus(currentSelectedClient, message, setTyping)
+  useTypingStatus(currentSelectedClient, message, setTyping);
 
   // SHOW ONLINE STATUS OF ALL CLIENTS + CURRENTLY SELECTED CLIENT
   useEffect(() => {
@@ -355,31 +349,17 @@ export const Inbox = () => {
 
   useEffect(() => {
     socket.on("online_from_server", async (userId) => {
-      if (
-        currentSelectedClient &&
-        currentSelectedClient._id.toString() === userId
-      ) {
-        setCurrentSelectedClientOnline(true);
-      }
-      const map = new Map(onlineStatusOfClients);
-      if (map.has(userId)) {
-        map.set(userId, true);
-        dispatch({ type: UPDATE_ONLINE_STATUS_OF_CLIENTS, payload: map });
-      }
+      dispatch({
+        type: USER_ONLINE,
+        payload: userId,
+      });
     });
 
     socket.on("offline_from_server", async (userId) => {
-      if (
-        currentSelectedClient &&
-        currentSelectedClient._id.toString() === userId
-      ) {
-        setCurrentSelectedClientOnline(false);
-      }
-      const map = new Map(onlineStatusOfClients);
-      if (map.has(userId)) {
-        map.set(userId, false);
-        dispatch({ type: UPDATE_ONLINE_STATUS_OF_CLIENTS, payload: map });
-      }
+      dispatch({
+        type: USER_ONLINE,
+        payload: userId,
+      });
     });
     return () => {
       socket.off("online_from_server");
@@ -387,86 +367,35 @@ export const Inbox = () => {
     };
   }, [
     socket,
-    onlineStatusOfClients,
-    currentSelectedClient,
-    currentSelectedClientOnline,
   ]);
 
-  useEffect(() => {
-    socket.on("is_online_from_server", (data) => {
-      const onlineClientId = data.id.toString();
-      if (onlineClientId === currentSelectedClient?._id.toString()) {
-        setCurrentSelectedClientOnline(data.online);
-      }
-      const temp = new Map();
-      listOfAllClients?.map((id: string) => {
-        if (id === onlineClientId) {
-          temp.set(id, data.online);
-        } else {
-          temp.set(id, onlineStatusOfClients.get(id) || false);
-        }
-      });
-      dispatch({ type: UPDATE_ONLINE_STATUS_OF_CLIENTS, payload: temp });
+  const handleReceiveMessage = (messageData: IMessage) => {
+    dispatch({
+      type: SOCKET_MESSAGE_RECEIVED,
+      payload: {
+        messageData,
+        user,
+      },
     });
-
-    return () => {
-      socket.off("is_online_from_server");
-    };
-  }, [currentSelectedClient, socket, currentSelectedClientOnline]);
+  };
 
   // CHECKING FOR RECEIVING MESSAGES
   useEffect(() => {
-    socket.on("receive_message", async (messageData) => {
-      if (messageData.orderId) return;
-      const { sender } = messageData;
-      const clientId = sender._id.toString();
-
-      if (listOfAllClients.includes(clientId)) {
-        const map = { ...allClientUserLastMessage };
-        map.set(clientId, messageData);
-        dispatch({ type: UPDATE_CLIENT_LAST_MESSAGE, payload: map });
-      }
-
-      if (currentSelectedClient?._id === clientId) {
-        const newInboxMessages = [...inboxMessages, messageData];
-        dispatch({
-          type: UPDATE_ALL_CHATS_WITH_CLIENT,
-          payload: newInboxMessages,
-        });
-      }
-    });
+    socket.on("receive_message", handleReceiveMessage);
 
     return () => {
-      socket.off("receive_message");
+      socket.off("receive_message", handleReceiveMessage);
     };
-  }, [socket, listOfAllClients, currentSelectedClientOnline]);
+  }, []);
 
-  // CHECKING FOR RECEIVING MESSAGES SELF
-  useEffect(() => {
-    socket.on("receive_message_self", async (messageData) => {
-      if (messageData.orderId) return;
-      const { receiver } = messageData;
-      const clientId = receiver._id;
+  // // CHECKING FOR RECEIVING MESSAGES SELF
+  // useEffect(() => {
+  //   socket.on("receive_message_self", handleReceiveMessage);
 
-      if (listOfAllClients.includes(clientId)) {
-        const map = new Map(allClientUserLastMessage);
-        map.set(clientId, messageData);
-        dispatch({ type: UPDATE_CLIENT_LAST_MESSAGE, payload: map });
-      }
-
-      if (currentSelectedClient?._id === clientId) {
-        const newInboxMessages = [...inboxMessages, messageData];
-        dispatch({
-          type: UPDATE_ALL_CHATS_WITH_CLIENT,
-          payload: newInboxMessages,
-        });
-      }
-    });
-
-    return () => {
-      socket.off("receive_message_self");
-    };
-  }, [listOfAllClients, currentSelectedClient]);
+  //   return () => {
+  //     socket.off("receive_message_self", handleReceiveMessage);
+  //   };
+  // }, []);
 
   const handleSelectionOfFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files || [];
@@ -529,11 +458,17 @@ export const Inbox = () => {
       setIsFilePicked(false);
       setSelectedFiles([]);
       setShowEmojiPicker(false);
+      setMessage("");
+      setTyping(false);
       await getAllMessagesBetweenTwoUser(detail._id);
     }
     setHideMessageListOnSmallDevices(false);
-    setCurrentSelectedClient(detail);
-    setCurrentSelectedClientOnline(onlineStatusOfClients.get(detail._id)!);
+    // setCurrentSelectedClient(detail);
+    dispatch({ type: UPDATE_CURRENTLY_SELECTED_CLIENT, payload: detail });
+    dispatch({
+      type: UPDATE_CURRENTLY_SELECTED_CLIENT_ONLINE,
+      payload: onlineStatusOfClients.get(detail._id),
+    });
   };
 
   useEffect(() => {
