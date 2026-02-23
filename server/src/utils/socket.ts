@@ -5,6 +5,8 @@ import { Server as HTTPServer } from "http";
 import { log } from "console";
 import jwt from "jsonwebtoken";
 import { arch } from "os";
+import { send } from "process";
+import { IMessage } from "../types/message.types";
 
 type CustomSocket = Socket & { user?: { id: string } };
 type AuthSocket = Socket & { user: { id: string } };
@@ -71,7 +73,7 @@ const runSocket = (server: HTTPServer) => {
         addNewUser(payload.id, socket.id);
         console.log(onlineUserList);
         const roomId = getUserRoomId(socket.user.id);
-        socket.join(roomId)
+        socket.join(roomId);
       } catch {
         socket.disconnect();
       }
@@ -101,40 +103,43 @@ const runSocket = (server: HTTPServer) => {
       requireAuth(socket, (authSocket, receiverUserId) => {
         const senderId = authSocket.user.id;
         const roomId = getRoomId(senderId, receiverUserId);
-        console.log("joined room", roomId)
+        console.log("joined room", roomId);
         authSocket.join(roomId);
       })
     );
 
-    socket.on("send_message", async (data) => {
-      const { sender, receiver } = data;
-
-      const receiverSocketIds = onlineUserList.get(receiver._id.toString());
-      const senderSocketIds = onlineUserList.get(sender._id.toString());
-
-      receiverSocketIds?.forEach((receiverSocketId: string) => {
-        io.to(receiverSocketId).emit("receive_message", data);
-      });
-
-      senderSocketIds?.forEach((senderSocketId: string) => {
-        log("senderSocketId", senderSocketId);
-        io.to(senderSocketId).emit("receive_message_self", data);
-      });
-    });
+    socket.on(
+      "send_message",
+      requireAuth(socket, (authSocket, messageData: IMessage) => {
+        console.log("inside send_message", messageData)
+        const sender = authSocket.user.id;
+        const {receiver} = messageData
+        const newMessageData = {
+          ...messageData,
+          sender,
+        }
+        const roomId = getRoomId(sender, receiver);
+        io.to(roomId).emit("receive_message", newMessageData);
+      })
+    );
 
     socket.on(
       "typing_started",
       requireAuth(socket, (authSocket, receiverUserId) => {
-        const roomId = getUserRoomId(receiverUserId)
-        authSocket.to(roomId).emit("typing_started_from_server", authSocket.user.id);
+        const roomId = getUserRoomId(receiverUserId);
+        authSocket
+          .to(roomId)
+          .emit("typing_started_from_server", authSocket.user.id);
       })
     );
 
     socket.on(
       "typing_stopped",
       requireAuth(socket, (authSocket, receiverUserId) => {
-        const roomId = getUserRoomId(receiverUserId)
-        authSocket.to(roomId).emit("typing_stopped_from_server", authSocket.user.id);
+        const roomId = getUserRoomId(receiverUserId);
+        authSocket
+          .to(roomId)
+          .emit("typing_stopped_from_server", authSocket.user.id);
       })
     );
 
@@ -147,21 +152,20 @@ const runSocket = (server: HTTPServer) => {
       socket.emit("is_online_from_server", newData);
     });
 
-    socket.on("get_online_status_of_all_clients", async (list) => {
+    socket.on("get_online_status_of_all_clients", (list) => {
       if (list.length == 0) return;
       const onlineStatusList = [];
       for (let clientId of list) {
-        const online = onlineUserList.has(clientId.toString());
+        const isOnline = onlineUserList.has(clientId.toString());
         onlineStatusList.push({
-          id: clientId,
-          online,
+          userId: clientId,
+          isOnline,
         });
       }
-
       socket.emit("online_status_of_all_clients_from_server", onlineStatusList);
     });
 
-    socket.on("update_order_detail", async (data) => {
+    socket.on("update_order_detail", (data) => {
       const receiverSocketIds = onlineUserList.get(data.seller._id.toString());
       const senderSocketIds = onlineUserList.get(data.buyer._id.toString());
 
@@ -265,7 +269,7 @@ const runSocket = (server: HTTPServer) => {
   const getUserRoomId = (userId: String) => {
     const roomId = "userId:" + userId;
     return roomId;
-  }
+  };
 };
 
 export default runSocket;
