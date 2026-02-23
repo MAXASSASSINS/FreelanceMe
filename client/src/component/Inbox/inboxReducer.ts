@@ -1,4 +1,5 @@
 import { IMessage } from "../../types/message.types";
+import { ONLINE_STATUS } from "../../types/miscellaneous.types";
 import { IUser } from "../../types/user.types";
 import { CurrentlySelectedClientChat } from "../CurrentlySelectedClientChat/CurrentlySelectedClientChat";
 import {
@@ -27,7 +28,7 @@ export type InboxMessageState = {
   onlineStatusOfClients: Map<string, boolean>;
   inboxMessagesLoading: boolean;
   currentSelectedClient: IUser | null;
-  currentSelectedClientOnline: boolean
+  currentSelectedClientOnline: boolean;
 };
 
 type Action = {
@@ -43,10 +44,13 @@ export const INBOX_DETAILS_INITIAL_STATE: InboxMessageState = {
   onlineStatusOfClients: new Map(),
   inboxMessagesLoading: false,
   currentSelectedClient: null,
-  currentSelectedClientOnline: false
+  currentSelectedClientOnline: false,
 };
 
-export const inboxReducer = (state: InboxMessageState, action: Action): InboxMessageState => {
+export const inboxReducer = (
+  state: InboxMessageState,
+  action: Action
+): InboxMessageState => {
   switch (action.type) {
     case UPDATE_ALL_CLIENTS_LIST: {
       return {
@@ -120,9 +124,14 @@ export const inboxReducer = (state: InboxMessageState, action: Action): InboxMes
       };
     }
     case UPDATE_ONLINE_STATUS_OF_CLIENTS: {
+      const onlineStatusList: ONLINE_STATUS[] = action.payload;
+      const newOnlineStatusOfClients = new Map();
+      onlineStatusList.forEach(({ userId, isOnline }) => {
+        newOnlineStatusOfClients.set(userId, isOnline);
+      });
       return {
         ...state,
-        onlineStatusOfClients: action.payload,
+        onlineStatusOfClients: newOnlineStatusOfClients,
       };
     }
     case UPDATE_CURRENTLY_SELECTED_CLIENT: {
@@ -134,7 +143,7 @@ export const inboxReducer = (state: InboxMessageState, action: Action): InboxMes
     case UPDATE_CURRENTLY_SELECTED_CLIENT_ONLINE: {
       return {
         ...state,
-        currentSelectedClientOnline: action.payload
+        currentSelectedClientOnline: action.payload,
       };
     }
     case SOCKET_MESSAGE_RECEIVED: {
@@ -186,10 +195,13 @@ export const inboxReducer = (state: InboxMessageState, action: Action): InboxMes
     }
     case USER_ONLINE: {
       const userId = action.payload;
-      const {currentSelectedClient, onlineStatusOfClients} = state;
+      const { currentSelectedClient, onlineStatusOfClients } = state;
       let newState: InboxMessageState = state;
-      
-      if(currentSelectedClient && currentSelectedClient._id.toString() === userId){
+
+      if (
+        currentSelectedClient &&
+        currentSelectedClient._id.toString() === userId
+      ) {
         newState.currentSelectedClientOnline = true;
       }
 
@@ -203,10 +215,13 @@ export const inboxReducer = (state: InboxMessageState, action: Action): InboxMes
     }
     case USER_OFFLINE: {
       const userId = action.payload;
-      const {currentSelectedClient, onlineStatusOfClients} = state;
+      const { currentSelectedClient, onlineStatusOfClients } = state;
       let newState: InboxMessageState = state;
-      
-      if(currentSelectedClient && currentSelectedClient._id.toString() === userId){
+
+      if (
+        currentSelectedClient &&
+        currentSelectedClient._id.toString() === userId
+      ) {
         newState.currentSelectedClientOnline = false;
       }
 

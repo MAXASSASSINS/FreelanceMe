@@ -333,29 +333,28 @@ export const Inbox = () => {
   useEffect(() => {
     socket.on(
       "online_status_of_all_clients_from_server",
-      (data: { id: string; online: boolean }[]) => {
-        const temp = new Map();
-        data.forEach(({ id, online }) => {
-          temp.set(id, online);
+      (onlineStatusList) => {
+        dispatch({
+          type: UPDATE_ONLINE_STATUS_OF_CLIENTS,
+          payload: onlineStatusList,
         });
-        dispatch({ type: UPDATE_ONLINE_STATUS_OF_CLIENTS, payload: temp });
       }
     );
 
     return () => {
       socket.off("online_status_of_all_clients_from_server");
     };
-  }, [socket, listOfAllClients]);
+  }, [socket]);
 
   useEffect(() => {
-    socket.on("online_from_server", async (userId) => {
+    socket.on("online_from_server", (userId) => {
       dispatch({
         type: USER_ONLINE,
         payload: userId,
       });
     });
 
-    socket.on("offline_from_server", async (userId) => {
+    socket.on("offline_from_server", (userId) => {
       dispatch({
         type: USER_ONLINE,
         payload: userId,
@@ -365,9 +364,7 @@ export const Inbox = () => {
       socket.off("online_from_server");
       socket.off("offline_from_server");
     };
-  }, [
-    socket,
-  ]);
+  }, [socket]);
 
   const handleReceiveMessage = (messageData: IMessage) => {
     dispatch({
@@ -387,15 +384,6 @@ export const Inbox = () => {
       socket.off("receive_message", handleReceiveMessage);
     };
   }, []);
-
-  // // CHECKING FOR RECEIVING MESSAGES SELF
-  // useEffect(() => {
-  //   socket.on("receive_message_self", handleReceiveMessage);
-
-  //   return () => {
-  //     socket.off("receive_message_self", handleReceiveMessage);
-  //   };
-  // }, []);
 
   const handleSelectionOfFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files || [];
