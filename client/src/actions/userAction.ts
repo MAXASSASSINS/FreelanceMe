@@ -1,3 +1,4 @@
+// @ts-ignore
 import { toast } from "react-toastify";
 import {
   GIG_USER_FAIL,
@@ -20,10 +21,11 @@ import {
 import { axiosInstance } from "../utility/axiosInstance";
 import { Dispatch, AnyAction } from "redux";
 import { IUser } from "../types/user.types";
-import { AppDispatch } from "../store";
+import { AppDispatch, RootState } from "../store";
 
 export const getUser =
-  (id: string) => async (dispatch: Dispatch<AnyAction>) => {
+  (id: string)  =>
+  async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: USER_REQUEST });
       const { data } = await axiosInstance.get(`/user/${id}`);
@@ -47,7 +49,8 @@ export const getUser =
   };
 
 export const getGigUser =
-  (id: string) => async (dispatch: Dispatch<AnyAction>) => {
+  (id: string)  =>
+  async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: GIG_USER_REQUEST });
       const { data } = await axiosInstance.get(`/user/${id}`);
@@ -71,7 +74,7 @@ export const getGigUser =
   };
 
 export const loggedUser =
-  (email: string, password: string) =>
+  (email: string, password: string)  =>
   async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: USER_REQUEST });
@@ -96,7 +99,7 @@ export const loggedUser =
         type: USER_FAIL,
         payload: error.response.data,
       });
-
+      console.log(window.location.pathname);
       toast.error(
         error.response?.data?.message
           ? error.response.data.message
@@ -124,7 +127,9 @@ export const signUpUser = (
       dispatch({
         type: SIGNUP_USER_SUCCESS,
       });
-      toast.success(data.message);
+      toast.success(data.message, {
+        timeout: 10000,
+      });
     } catch (error: any) {
       dispatch({
         type: SIGNUP_USER_FAIL,
@@ -140,55 +145,67 @@ export const signUpUser = (
   };
 };
 
-export const loadUser = () => async (dispatch: Dispatch<AnyAction>) => {
-  try {
-    let user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (document.cookie.includes("token") && user && user._id) {
-    } else {
+export const loadUser =
+  (silent = false)  => async (dispatch: Dispatch<AnyAction>, getState: () => RootState) => {
+    const { isAuthenticated } = getState().user;
+    if (isAuthenticated && silent) {
+      console.log('silent')
+      try {
+        const { data } = await axiosInstance.get("/me");
+        dispatch({
+          type: LOAD_USER_SUCCESS,
+          payload: data.user,
+        });
+      } catch {
+        // ignore silently
+      }
+      return;
+    }
+    try {
       dispatch({ type: LOAD_USER_REQUEST });
       const { data } = await axiosInstance.get("/me");
-      user = data.user;
+
+      dispatch({
+        type: LOAD_USER_SUCCESS,
+        payload: data.user,
+      });
+    } catch (error: any) {
+      dispatch({
+        type: LOAD_USER_FAIL,
+        payload: error.response.data,
+      });
     }
-    localStorage.setItem("user", JSON.stringify(user));
-    dispatch({
-      type: LOAD_USER_SUCCESS,
-      payload: user,
-    });
-  } catch (error: any) {
-    dispatch({
-      type: LOAD_USER_FAIL,
-      payload: error,
-    });
-  }
-};
+  };
 
-export const logoutUser = () => async (dispatch: Dispatch<AnyAction>) => {
-  try {
-    dispatch({ type: LOGOUT_USER_REQUEST });
+export const logoutUser =
+  ()  => async (dispatch: Dispatch<AnyAction>) => {
+    try {
+      dispatch({ type: LOGOUT_USER_REQUEST });
 
-    const { data } = await axiosInstance.get("/logout");
+      const { data } = await axiosInstance.get("/logout");
 
-    dispatch({
-      type: LOGOUT_USER_SUCCESS,
-      payload: data.success,
-    });
-    localStorage.removeItem("user");
-  } catch (error: any) {
-    dispatch({
-      type: LOGOUT_USER_FAIL,
-      payload: error.response.data,
-    });
-    toast.error(
-      error.response.data.message
-        ? error.response.data.message
-        : "Oops something went wrong"
-    );
-  }
-};
+      dispatch({
+        type: LOGOUT_USER_SUCCESS,
+        payload: data.success,
+      });
+      localStorage.setItem("redirectUrl", "/");
+      localStorage.setItem("logout", Date.now().toString());
+    } catch (error: any) {
+      dispatch({
+        type: LOGOUT_USER_FAIL,
+        payload: error.response.data,
+      });
+      toast.error(
+        error.response.data.message
+          ? error.response.data.message
+          : "Oops something went wrong"
+      );
+    }
+  };
 
 export const updateUser =
-  (user: IUser) => async (dispatch: Dispatch<AnyAction>) => {
-    localStorage.setItem("user", JSON.stringify(user));
+  (user: IUser)  =>
+  async (dispatch: Dispatch<AnyAction>) => {
     dispatch({
       type: UPDATE_USER_SUCCESS,
       payload: user,

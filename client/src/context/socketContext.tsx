@@ -11,46 +11,75 @@ type SocketContextProviderProps = {
 
 const socketInitialState = io(baseURL, {
   autoConnect: false,
+  transports: ["websocket"]
 });
 
 const SocketContext = createContext<Socket>(socketInitialState);
 
-const SocketContextProvider = ({
-  children,
-}: SocketContextProviderProps) => {
-  const [socket, setSocket] = useState<Socket>(socketInitialState);
+const SocketContextProvider = ({ children }: SocketContextProviderProps) => {
+  const socket = socketInitialState;
 
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
 
   useEffect(() => {
-    socket.connect();
+    const handleConnect = () => {
+      console.log("socket connected");
+      if (isAuthenticated) {
+        const token = Cookies.get("token");
+        if (token) {
+          console.log("emitting login after connect");
+          socket.emit("login", token);
+        }
+      }
+    };
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    socket.on("connect", handleConnect);
 
     return () => {
-      // console.log("disconnecting socket");
-      socket.disconnect();
-    }
-  }, [socket])
+      socket.off("connect", handleConnect);
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    let newSocket: Socket | null = null;
-    if (user && isAuthenticated) {
-      newSocket = io(baseURL, {
-        auth: {
-          token: Cookies.get("token"),
-        },
-        autoConnect: false,
-      });
-      newSocket.connect();
-      setSocket(newSocket);
+    // console.log("isAuthenticated", isAuthenticated)
+    if (!socket.connected) return;
+    // console.log("after isAuthenticated", isAuthenticated)
+
+    if (isAuthenticated) {
+      const token = Cookies.get("token");
+      if (token) {
+        // console.log("emitting login event...");
+        socket.emit("login", token);
+      }
+    } else {
+      socket.emit("logout");
     }
+  }, [isAuthenticated]);
+
+  // temporary useEffect to know connection status
+  useEffect(() => {
+    const onConnect = () => {
+      console.log("✅ socket connected:", socket.id);
+    };
+
+    const onDisconnect = (reason: string) => {
+      console.log("❌ socket disconnected:", reason);
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
     return () => {
-      // console.log("disconnecting new socket");
-      newSocket?.disconnect();
-      setSocket(socketInitialState);
-    }
-  }, [user, isAuthenticated]);
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
 
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>

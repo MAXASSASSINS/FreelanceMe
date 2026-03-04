@@ -85,4 +85,13 @@ export interface IUser {
   emailVerificationToken?: string;
   emailVerificationExpire?: Date;
   isEmailVerified: boolean;
+  isOnline: boolean
+}
+
+export interface IUserLite {
+  _id: string;
+  name: string;
+  email: string;
+  avatar: IFile;
+  isOnline: boolean
 }

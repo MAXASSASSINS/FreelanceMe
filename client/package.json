@@ -17,6 +17,10 @@
     "axios": "^0.27.2",
     "babel-plugin-macros": "^3.1.0",
     "blurhash": "^2.0.5",
+<<<<<<< HEAD
+=======
+    "bootstrap": "^5.3.8",
+>>>>>>> bug-web-sockets
     "cloudinary-react": "^1.8.1",
     "draft-convert": "^2.1.13",
     "draft-js": "^0.11.7",
@@ -30,6 +34,10 @@
     "moment-timezone": "^0.5.34",
     "react": "^18.2.0",
     "react-blurhash": "^0.3.0",
+<<<<<<< HEAD
+=======
+    "react-bootstrap": "^2.10.10",
+>>>>>>> bug-web-sockets
     "react-dom": "^18.2.0",
     "react-draft-wysiwyg": "^1.15.0",
     "react-icon": "^1.0.0",
