@@ -1,13 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getFavoriteGigs } from "../actions/gigAction";
+import { getFavoriteGigs, updateGigUsersOnlineStatus } from "../actions/gigAction";
 import { AppDispatch, RootState } from "../store";
 import { GigCard } from "./GigCard/GigCard";
+import { useSocket } from "../context/socketContext";
+import { ONLINE_STATUS } from "../types/miscellaneous.types";
 
 export const FavouriteGigs = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const socket = useSocket()
 
   const { isAuthenticated } = useSelector((state: RootState) => state.user);
 
@@ -59,6 +62,33 @@ export const FavouriteGigs = () => {
       observer.observe(image);
     });
   }, [gigs]);
+
+  // memoizing gig users ids key to prevent infinite fetch
+  const gigUserIdsKey = useMemo(() => {
+    if (!gigs || gigs.length === 0) return "";
+    return Array.from(new Set(gigs.map((gig) => gig.user._id)))
+      .sort()
+      .join(",");
+  }, [gigs]);
+
+  // emit event to fetch online status of gig's user
+  useEffect(() => {
+    if (!gigUserIdsKey) return;
+    console.log("emitting get user onlijne status favirourite")
+    socket.emit("get_users_online_status", gigUserIdsKey.split(","));
+  }, [gigUserIdsKey]);
+
+  // update online status
+  useEffect(() => {
+    const handler = (onlineStatusList: ONLINE_STATUS[]) => {
+      dispatch(updateGigUsersOnlineStatus(onlineStatusList));
+    };
+
+    socket.on("online_user_snapshot", handler);
+    return () => {
+      socket.off("online_user_snapshot", handler);
+    };
+  }, [dispatch, socket]);
 
   return (
     <div className="min-h-[calc(100vh-146.5px)] sm:min-h-[calc(100vh-81px)] mb-8">
