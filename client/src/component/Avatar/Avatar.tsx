@@ -16,7 +16,7 @@ export const Avatar = ({
   onlineStatus,
   width,
   alt,
-  onlineStatusWidth = "40%",
+  onlineStatusWidth = "0.75rem",
   fontSize = "1.125rem",
   useWebp = false
 }: AvatarProps) => {

@@ -67,6 +67,8 @@ export const GigCard = ({ gig, lazyLoad = false, online, imageQuality }: GigCard
 
   const debouncedUpdateFavourite = debounce(handleUpdateFavourite, 300);
 
+  gig.user = gig.user as IUser;
+
   return (
     <div className="gig-card">
       <div className="container-wrapper">
@@ -77,7 +79,7 @@ export const GigCard = ({ gig, lazyLoad = false, online, imageQuality }: GigCard
             alt="user avatar"
             width="2rem"
             userName={gig.user.name}
-            onlineStatus={gig.user.isOnline}
+            onlineStatus={online}
           />
           <Link to={`/user/${gig.user._id}`}>
             <div className="gig-user-name">{gig.user.name}</div>

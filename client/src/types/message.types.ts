@@ -1,6 +1,6 @@
 import { IFile } from "./file.types";
 import { IOrder } from "./order.types";
-import { IUserLite } from "./user.types";
+import { IUser } from "./user.types";
 
 export interface IMessage {
   _id: string;
@@ -8,8 +8,8 @@ export interface IMessage {
     text?: string;
   };
   files: IFile[];
-  sender: IUserLite | string;
-  receiver: IUserLite | string;
+  sender: IUser | string;
+  receiver: IUser | string;
   orderId?: IOrder | string;
   markAsRead?: boolean;
   createdAt: Date;
