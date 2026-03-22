@@ -1,7 +1,7 @@
 import { Rating } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import { TextArea, TextAreaRef } from "../TextArea/TextArea";
+import { TextArea, TextAreaRef } from "../TextArea";
 import { updateOrderDetail } from "../../actions/orderAction";
 import { axiosInstance } from "../../utility/axiosInstance";
 import { useDispatch } from "react-redux";
@@ -58,7 +58,7 @@ export const SellerFeedback = () => {
         <p className="font-semibold mb-3">Share some details (public)</p>
         <TextArea
           maxLength={700}
-          style={{ height: "10rem", lineHeight: "1.4rem" }}
+          className="h-40 leading-[1.4]"
           ref={commentRef}
           placeholder="You'll be able to view the buyer's feedback after you leave your feedback."
         />

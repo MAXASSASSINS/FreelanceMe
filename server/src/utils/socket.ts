@@ -2,10 +2,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import User from "../models/userModel";
 import ErrorHandler from "./errorHandler";
 import { Server as HTTPServer } from "http";
-import { log } from "console";
 import jwt from "jsonwebtoken";
-import { arch } from "os";
-import { send } from "process";
 import { IMessage } from "../types/message.types";
 
 type CustomSocket = Socket & { user?: { id: string } };
@@ -15,6 +12,9 @@ interface AuthTokenPayload extends jwt.JwtPayload {
 }
 
 const runSocket = (server: HTTPServer) => {
+
+  let onlineUserList = new Map();
+
   const io = new SocketIOServer(server, {
     transports: ["websocket"],
     cors: {
@@ -23,7 +23,19 @@ const runSocket = (server: HTTPServer) => {
     },
   });
 
-  let onlineUserList = new Map();
+  io.use((socket: CustomSocket, next) => {
+    const token = socket.handshake.auth.token;
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      // console.log("user", user);
+      socket.user = user;
+      next();
+    } catch (error) {
+      socket.user = undefined;
+      // console.log("user not authorised");
+    }
+    next();
+  });
 
   // handling idle connections cleanup
   setInterval(() => {
@@ -143,14 +155,14 @@ const runSocket = (server: HTTPServer) => {
       })
     );
 
-    socket.on("is_online", (clientId) => {
-      const online = onlineUserList.has(clientId);
-      const newData = {
-        id: clientId,
-        online,
-      };
-      socket.emit("is_online_from_server", newData);
-    });
+      socket.on("is_online", (clientId) => {
+        const online = onlineUserList.has(clientId);
+        const newData = {
+          id: clientId,
+          online,
+        };
+        socket.emit("is_online_from_server", newData);
+      });
 
     socket.on("get_online_status_of_all_clients", (list) => {
       if (list.length == 0) return;
@@ -169,14 +181,14 @@ const runSocket = (server: HTTPServer) => {
       const receiverSocketIds = onlineUserList.get(data.seller._id.toString());
       const senderSocketIds = onlineUserList.get(data.buyer._id.toString());
 
-      receiverSocketIds?.forEach((receiverSocketId: string) => {
-        io.to(receiverSocketId).emit("update_order_detail_server", data);
-      });
+        receiverSocketIds?.forEach((receiverSocketId: string) => {
+          io.to(receiverSocketId).emit("update_order_detail_server", data);
+        });
 
-      senderSocketIds?.forEach((senderSocketId: string) => {
-        io.to(senderSocketId).emit("update_order_detail_server", data);
+        senderSocketIds?.forEach((senderSocketId: string) => {
+          io.to(senderSocketId).emit("update_order_detail_server", data);
+        });
       });
-    });
 
     socket.on("disconnect", () => {
       const userId = getUserBySocketId(socket.id);
@@ -193,11 +205,11 @@ const runSocket = (server: HTTPServer) => {
 
   const addNewUser = (userId: string, socketId: string) => {
     if (!onlineUserList.has(userId)) {
-      const set = new Set();
+      const set = new Set<string>();
       set.add(socketId);
       onlineUserList.set(userId, set);
     } else {
-      const set = onlineUserList.get(userId);
+      const set = onlineUserList.get(userId)!;
       set.add(socketId);
       onlineUserList.set(userId, set);
     }

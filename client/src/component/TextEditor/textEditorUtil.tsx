@@ -41,9 +41,9 @@ export const getIcon = (value: string) => {
     case "HIGHLIGHT":
       return <MdOutlineHighlight />;
     case "unordered-list-item":
-      return <GoListOrdered />;
-    case "ordered-list-item":
       return <GoListUnordered />;
+    case "ordered-list-item":
+      return <GoListOrdered />;
     default:
       return "";
   }

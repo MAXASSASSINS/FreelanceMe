@@ -1,44 +1,52 @@
 .textEditor-main {
   color: var(--light-heading);
+
+  .textEditor-toolbar {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--dark-separator);
+    border: 1px solid var(--no-focus);
+
+    button {
+      border: none;
+      background-color: var(--dark-separator);
+      font-weight: 600;
+    }
+
+    button:hover {
+      color: var(--primary);
+    }
+  }
+
+  .DraftEditor-root {
+    border: 1px solid var(--no-focus);
+    background-color: white;
+    height: 15rem;
+    width: 100%;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .DraftEditor-editorContainer,
+  .public-DraftEditor-content {
+    height: 100%;
+  }
+
+  .DraftEditor-editorContainer {
+    color: red;
+  }
+
+  .public-DraftEditor-content {
+    color: var(--light-heading);
+  }
+
+  .textEditor-footer {
+    position: relative;
+    text-align: right;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--light-heading);
+  }
 }
-.textEditor-main .textEditor-toolbar {
-  display: flex;
-  gap: 1rem;
-  padding: 0.5rem 0.75rem;
-  background-color: var(--dark-separator);
-  border: 1px solid var(--no-focus);
-}
-.textEditor-main .textEditor-toolbar button {
-  border: none;
-  background-color: var(--dark-separator);
-  font-weight: 600;
-}
-.textEditor-main .textEditor-toolbar button:hover {
-  color: var(--primary);
-}
-.textEditor-main .DraftEditor-root {
-  border: 1px solid var(--no-focus);
-  background-color: white;
-  height: 15rem;
-  width: 100%;
-  overflow-y: auto;
-  padding: 1rem;
-}
-.textEditor-main .DraftEditor-editorContainer,
-.textEditor-main .public-DraftEditor-content {
-  height: 100%;
-}
-.textEditor-main .DraftEditor-editorContainer {
-  color: red;
-}
-.textEditor-main .public-DraftEditor-content {
-  color: var(--light-heading);
-}
-.textEditor-main .textEditor-footer {
-  position: relative;
-  text-align: right;
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 300;
-  color: var(--light-heading);
-}/*# sourceMappingURL=textEditor.css.map */

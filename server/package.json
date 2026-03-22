@@ -5,10 +5,10 @@
   "main": "dist/index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-    "start": "tsc && node dist/index.js",
-    "dev:build": "nodemon --watch '**/*.ts' --exec 'tsc'",
-    "style": "npx tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch",
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "style": "tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch",
     "tailwind:css": "postcss public/styles/tailwind.css -o public/styles/style.css"
   },
   "keywords": [],

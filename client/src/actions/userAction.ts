@@ -1,4 +1,3 @@
-// @ts-ignore
 import { toast } from "react-toastify";
 import {
   GIG_USER_FAIL,
@@ -24,8 +23,7 @@ import { IUser } from "../types/user.types";
 import { AppDispatch, RootState } from "../store";
 
 export const getUser =
-  (id: string)  =>
-  async (dispatch: Dispatch<AnyAction>) => {
+  (id: string) => async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: USER_REQUEST });
       const { data } = await axiosInstance.get(`/user/${id}`);
@@ -49,8 +47,7 @@ export const getUser =
   };
 
 export const getGigUser =
-  (id: string)  =>
-  async (dispatch: Dispatch<AnyAction>) => {
+  (id: string) => async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: GIG_USER_REQUEST });
       const { data } = await axiosInstance.get(`/user/${id}`);
@@ -74,7 +71,7 @@ export const getGigUser =
   };
 
 export const loggedUser =
-  (email: string, password: string)  =>
+  (email: string, password: string) =>
   async (dispatch: Dispatch<AnyAction>) => {
     try {
       dispatch({ type: USER_REQUEST });
@@ -99,7 +96,7 @@ export const loggedUser =
         type: USER_FAIL,
         payload: error.response.data,
       });
-      console.log(window.location.pathname);
+
       toast.error(
         error.response?.data?.message
           ? error.response.data.message
@@ -127,9 +124,7 @@ export const signUpUser = (
       dispatch({
         type: SIGNUP_USER_SUCCESS,
       });
-      toast.success(data.message, {
-        timeout: 10000,
-      });
+      toast.success(data.message);
     } catch (error: any) {
       dispatch({
         type: SIGNUP_USER_FAIL,
@@ -177,12 +172,11 @@ export const loadUser =
     }
   };
 
-export const logoutUser =
-  ()  => async (dispatch: Dispatch<AnyAction>) => {
-    try {
-      dispatch({ type: LOGOUT_USER_REQUEST });
+export const logoutUser = () => async (dispatch: Dispatch<AnyAction>) => {
+  try {
+    dispatch({ type: LOGOUT_USER_REQUEST });
 
-      const { data } = await axiosInstance.get("/logout");
+    const { data } = await axiosInstance.get("/logout");
 
       dispatch({
         type: LOGOUT_USER_SUCCESS,
@@ -204,8 +198,8 @@ export const logoutUser =
   };
 
 export const updateUser =
-  (user: IUser)  =>
-  async (dispatch: Dispatch<AnyAction>) => {
+  (user: IUser) => async (dispatch: Dispatch<AnyAction>) => {
+    localStorage.setItem("user", JSON.stringify(user));
     dispatch({
       type: UPDATE_USER_SUCCESS,
       payload: user,

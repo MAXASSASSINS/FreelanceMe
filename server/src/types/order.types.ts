@@ -4,16 +4,18 @@ import { IGig } from "./gig.types";
 import { IUser } from "./user.types";
 import { QuestionType } from "../constants/globalConstants";
 
+export type Option = {
+  title: string;
+  selected: boolean;
+};
+
 export interface IOrderRequirement {
   questionTitle: string;
   questionType: QuestionType;
   answerRequired: boolean;
   multipleOptionSelect: boolean;
   answerText?: string;
-  options: {
-    title: string;
-    selected: boolean;
-  }[];
+  options: Option[];
   files: IFile[];
 }
 

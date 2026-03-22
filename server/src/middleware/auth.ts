@@ -22,7 +22,7 @@ export const isAuthenticated = catchAsyncErrors(async (req: Request, res: Respon
     return next(new ErrorHandler("Invalid token", 401));
   }
 
-  const user = await User.findById(decodedData.id);
+  const user = await User.findById(decodedData.id).select("+email +password +role +phone.code +phone.number +balance +withdrawEligibility +razorPayAccountDetails.status +razorPayAccountDetails.accountHolderName +favouriteGigs +resetPasswordToken +resetPasswordExpire +emailVerificationToken +emailVerificationExpire +isEmailVerified");
 
   if (user === null) {
     return next(new ErrorHandler("User not found", 404));

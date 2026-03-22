@@ -23,11 +23,11 @@ const checkForErrors = (body: CheckForErrorsBody, currentStep: number) => {
         error = "Please enter your gig title";
         return error;
       }
-      if (!category || category === "Select a category") {
+      if (!category || category.toLowerCase() === "Select a category".toLowerCase()) {
         error = "Please enter your gig category";
         return error;
       }
-      if (!subCategory || subCategory === "Select a sub-category") {
+      if (!subCategory || subCategory.toLowerCase() === "Select a sub-category".toLowerCase()) {
         error = "Please enter your gig sub category";
         return error;
       }
@@ -101,9 +101,10 @@ export const getAllGigs = catchAsyncErrors(async (req, res, next) => {
     .populate()
     .select();
 
-  let gigs: (IGig & {matchingStatus:number})[] = await feature.query;
+  let gigs: (IGig & { matchingStatus: number })[] = await feature.query;
 
-  let keywords = typeof req.query.keywords === 'string' ? req.query.keywords.split(",") : [];
+  let keywords =
+    typeof req.query.keywords === "string" ? req.query.keywords.split(",") : [];
 
   if (keywords.length > 0) {
     gigs.forEach((gig) => {
@@ -133,7 +134,7 @@ export const getAllGigs = catchAsyncErrors(async (req, res, next) => {
 
 // Get Favorite gigs
 export const getFavoriteGigs = catchAsyncErrors(async (req, res, next) => {
-  const user = await User.findById(req.user?.id);
+  const user = req.user;
 
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
@@ -141,8 +142,9 @@ export const getFavoriteGigs = catchAsyncErrors(async (req, res, next) => {
 
   const favouriteGigs = await Gig.find({
     _id: { $in: user.favouriteGigs },
-  }).select("title pricing images ratings numOfRatings searchTags")
-  .populate("user", "name avatar");
+  })
+    .select("title pricing images ratings numOfRatings searchTags")
+    .populate("user", "name avatar");
 
   res.status(200).json({
     success: true,
@@ -220,6 +222,11 @@ export const updateGig = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
+  gig = await Gig.findById(req.params.id).populate(
+    "user",
+    "name avatar numOfRatings ratings userSince country description tagline online lastDelivery"
+  );
+
   res.status(200).json({
     success: true,
     message: "Gig updated sucessfully",
@@ -247,10 +254,9 @@ export const deleteGig = catchAsyncErrors(async (req, res, next) => {
 export const createGigReview = catchAsyncErrors(async (req, res, next) => {
   const { rating, comment, gigId } = req.body;
 
-  if(!rating || !comment || !gigId) {
+  if (!rating || !comment || !gigId) {
     return next(new ErrorHandler("Please provide all the fields", 400));
   }
-
 
   const review: IReview = {
     user: req.user?._id,
@@ -263,21 +269,21 @@ export const createGigReview = catchAsyncErrors(async (req, res, next) => {
 
   const gig = await Gig.findById(gigId);
 
-  if(!gig) {
+  if (!gig) {
     return next(new ErrorHandler("Gig not found", 404));
   }
 
   const gigUser = await User.findById(gig.user);
 
-  if(!gigUser) {
+  if (!gigUser) {
     return next(new ErrorHandler("Gig User not found", 404));
   }
 
   gig.reviews?.push(review);
   gig.numOfReviews = gig.reviews?.length ?? 0;
   gig.numOfRatings = (gig.numOfRatings ?? 0) + 1;
-  gigUser.numOfRatings = (gigUser.numOfRatings ?? 0)  + 1;
-  gigUser.numOfReviews  = (gigUser.numOfReviews ?? 0) + 1;
+  gigUser.numOfRatings = (gigUser.numOfRatings ?? 0) + 1;
+  gigUser.numOfReviews = (gigUser.numOfReviews ?? 0) + 1;
 
   gig.ratings = gig.ratings || 0;
 

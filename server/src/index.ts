@@ -82,6 +82,10 @@ app.use("/", gigRoutes);
 app.use("/", orderRoutes);
 app.use("/", messageRoutes);
 
+app.get("/ping", (req, res) => {
+  return res.status(200).send("pong");
+})
+
 // Middleware for Errors
 app.use(errorMiddleware);
 

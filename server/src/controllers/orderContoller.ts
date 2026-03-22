@@ -11,11 +11,17 @@ import { Request, Response } from "express";
 import { frontendHomeUrl } from "../index";
 import {
   IBuyerFeedback,
+  IOrder,
   IOrderRequirement,
+  IPackageDetails,
   ISellerFeedback,
 } from "../types/order.types";
 import { IReview, IUser } from "../types/user.types";
 import { FREE_TEXT } from "../constants/globalConstants";
+import { IGigRequirement } from "../types/gig.types";
+import { title } from "process";
+import { registerUser } from "./userController";
+import { IFile } from "../types/file.types";
 
 // Create new order
 export const newOrder = async (user: IUser, body: any) => {
@@ -56,21 +62,23 @@ export const newOrder = async (user: IUser, body: any) => {
     return requirement.options?.map((option) => {
       return {
         title: option,
+        selected: false,
       };
     });
   });
 
-  const requirements = gig.requirements?.map((requirement, index) => {
+  const requirements: IOrderRequirement[] = gig.requirements?.map((requirement, index) => {
     return {
       questionTitle: requirement.questionTitle,
       questionType: requirement.questionType,
       answerRequired: requirement.answerRequired,
       multipleOptionSelect: requirement.multipleOptionSelect,
-      options: options![index],
+      options: options[index] ? options[index] : [],
+      files: [],
     };
   });
-
-  const packageDetails = {
+  
+  const packageDetails: IPackageDetails = {
     packageTitle: gig.pricing![packageNumber].packageTitle,
     packageDescription: gig.pricing![packageNumber].packageDescription,
     packageDeliveryTime: gig.pricing![packageNumber].packageDeliveryTime,
@@ -80,11 +88,7 @@ export const newOrder = async (user: IUser, body: any) => {
     packagePrice: gig.pricing![packageNumber].packagePrice,
   };
 
-  const image = {
-    publicId: gig.images![0].publicId,
-    url: gig.images![0].url,
-    blurhash: gig.images![0].blurhash,
-  };
+  const image: IFile = gig.images![0];
 
   const paymentDetails = {
     razorpay_payment_id,
@@ -92,7 +96,7 @@ export const newOrder = async (user: IUser, body: any) => {
     razorpay_signature,
   };
 
-  const order = await Order.create({
+  const order: IOrder = await Order.create({
     orderId: rString,
     amount: totalAmount,
     duration,
@@ -116,7 +120,8 @@ export const updateOrder = catchAsyncErrors(async (req, res, next) => {});
 // update order requirements
 export const updateOrderRequirements = catchAsyncErrors(
   async (req, res, next) => {
-    const { requirements: answers } = req.body;
+    const { answers } = req.body;
+    
     let order = await Order.findById(req.params.id).populate(
       "seller buyer",
       "name email"
@@ -141,17 +146,10 @@ export const updateOrderRequirements = catchAsyncErrors(
       };
 
       if (requirement.questionType === FREE_TEXT) {
-        temp.answerText = answers[index].answer;
+        temp.answerText = answers[index].answerText;
         temp.files = answers[index].files;
       } else {
-        temp.options = answers[index].answer.map(
-          (option: string, idx: number) => {
-            return {
-              title: requirement.options![idx].title,
-              selected: option,
-            };
-          }
-        );
+        temp.options = answers[index].options;
       }
       return temp;
     });
@@ -234,10 +232,6 @@ export const addOrderDelivery = catchAsyncErrors(async (req, res, next) => {
       )
     );
   }
-
-  // if (order.deliveryDate < Date.now()) {
-  //   return next(new ErrorHandler("Delivery date has passed", 400));
-  // }
 
   if (
     order.status !== "In Progress" &&
@@ -815,7 +809,7 @@ export const packagePayment = catchAsyncErrors(async (req, res, next) => {
 
 // payment verification
 export const paymentVerification = catchAsyncErrors(async (req, res, next) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, gigId, packageNumber } =
     req.body;
 
   if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {

@@ -1,26 +1,27 @@
-import mongoose, {Document} from "mongoose";
+import mongoose, { Document } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import {IUser, IPhone } from "../types/user.types";
+import { IUser, IPhone } from "../types/user.types";
 import fileSchema from "./fileSchema";
-
 
 const phoneSchema = new mongoose.Schema<IPhone>({
   code: {
     type: String,
     required: function (this: IPhone) {
       return !!(this as IPhone).number;
-    }
+    },
+    select: false,
   },
   number: {
     type: String,
     required: function (this: IPhone) {
       return !!(this as IPhone).code;
     },
+    select: false,
     minlength: [10, "Phone number should have at least 10 characters"],
-    maxlength: [15, "Phone number cannot exceed 15 characters"]
+    maxlength: [15, "Phone number cannot exceed 15 characters"],
   },
 });
 
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema<IUser>({
     required: [true, "Please enter your email"],
     unique: true,
     validate: [validator.isEmail, "Please enter valid email"],
+    select: false,
   },
 
   password: {
@@ -107,6 +109,7 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     enum: ["user", "admin"],
     default: "user",
+    select: false,
   },
 
   tagline: {
@@ -204,31 +207,31 @@ const userSchema = new mongoose.Schema<IUser>({
   balance: {
     type: Number,
     default: 0,
-  },
-
-  stripeAccountId: {
-    type: String,
-    default: "",
+    select: false,
   },
 
   withdrawEligibility: {
     type: Boolean,
     default: false,
-    required: true
+    required: true,
+    select: false,
   },
 
   razorPayAccountDetails: {
     accountId: {
       type: String,
       default: "",
+      select: false,
     },
     stakeholderId: {
       type: String,
       default: "",
+      select: false,
     },
     productId: {
       type: String,
       default: "",
+      select: false,
     },
     status: {
       type: String,
@@ -241,11 +244,13 @@ const userSchema = new mongoose.Schema<IUser>({
         "suspended",
       ],
       default: "new",
+      select: false,
     },
     accountHolderName: {
       type: String,
       default: "",
-    }
+      select: false,
+    },
   },
 
   lastDelivery: {
@@ -259,14 +264,27 @@ const userSchema = new mongoose.Schema<IUser>({
     },
   ],
 
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  emailVerificationToken: String,
-  emailVerificationExpire: Date,
+  resetPasswordToken: {
+    type: String,
+    select: false,
+  },
+  resetPasswordExpire: {
+    type: Date,
+    select: false,
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false,
+  },
+  emailVerificationExpire: {
+    type: Date,
+    select: false,
+  },
 
   isEmailVerified: {
     type: Boolean,
     default: false,
+    select: false,
   },
 });
 
@@ -305,7 +323,7 @@ userSchema.methods.getResetPasswordToken = function () {
     .digest("hex");
 
   this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
-  
+
   return resetToken;
 };
 

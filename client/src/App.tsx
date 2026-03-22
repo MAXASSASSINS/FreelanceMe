@@ -1,89 +1,88 @@
-import "bootstrap/dist/css/bootstrap.css";
 import { createContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-// @ts-ignore
+import { Route, Routes, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "../src/component/common.css";
 import { loadUser } from "./actions/userAction";
 import "./app.css";
-import { CreateGig } from "./component/CreateGig/CreateGig";
 import { Footer } from "./component/Footer/Footer";
-import { GigDetail } from "./component/GigDetail.js/GigDetail";
 import { Header } from "./component/Header/Header";
-import { Home } from "./component/Home/Home";
-import { Inbox } from "./component/Inbox/Inbox2";
-import { Login } from "./component/Login/Login";
 import { NotFoundPage } from "./component/NotFoundPage/NotFoundPage";
-import { PlaceOrder } from "./component/PlaceOrder/PlaceOrder";
 import { Sidebar } from "./component/Sidebar/Sidebar";
-import { SubmitRequirements } from "./component/SubmitRequirements/SubmitRequirements";
 import { Test } from "./component/Test/Test";
-import { UserDetail } from "./component/UserDetail/UserDetail";
+import { CreateGig } from "./Pages/CreateGig";
+import { GigDetail } from "./Pages/GigDetail/GigDetail";
+import { Home } from "./Pages/Home";
+import { Inbox } from "./Pages/Inbox";
+import { Login } from "./Pages/Login";
+import { PlaceOrder } from "./Pages/PlaceOrder";
+import { SubmitRequirements } from "./Pages/SubmitRequirements";
+import { UserDetail } from "./Pages/UserDetail/UserDetail";
 import { AppDispatch, RootState } from "./store";
-
 // @ts-ignore
 import { CloudinaryContext } from "cloudinary-react";
 import { Tooltip } from "./component/Tooltip/Tooltip";
 import "./utility/color";
-
+import Cookies from "js-cookie";
 import "react-tooltip/dist/react-tooltip.css";
-import { BalanceDetail } from "./component/BalanceDetail/BalanceDetail";
-import { BuyerFeedback } from "./component/Feedback/BuyerFeedback";
-import { OrderDetail } from "./component/OrderDetail/OrderDetail";
-import { Orders } from "./component/Orders/Orders";
-import { SignUp } from "./component/SignUp";
 import SocketContextProvider from "./context/socketContext";
-
+import { BalanceDetail } from "./Pages/BalanceDetail";
+import { BuyerFeedback } from "./Pages/BuyerFeedback";
+import { OrderDetail } from "./Pages/OrderDetail";
+import { Orders } from "./Pages/Orders";
+import { SignUp } from "./Pages/SignUp";
 import { useDispatch } from "react-redux";
-import { BankAccountForm } from "./component/BankAccountForm";
-import { DataSendingLoading } from "./component/DataSendingLoading/DataSendingLoading";
-import { FavouriteGigs } from "./component/FavouriteGigs";
+import { DataSendingLoading } from "./component/DataSendingLoading";
 import ProtectedRoute from "./component/ProtectedRoute";
 import { ResetPassword } from "./component/ResetPassword";
 import ScrollToTop from "./component/ScrollToTop";
-import { UpdateUserProfile } from "./component/UpdateUserProfile";
 import {
   useGlobalLoading,
   useGlobalLoadingText,
 } from "./context/globalLoadingContext";
-import { LOGOUT_USER_SUCCESS } from "./constants/userConstants";
 import { useAuthSync } from "./hooks/useAuthSync";
+import { useSocket } from "./context/socketContext";
+import { BankAccountForm } from "./Pages/BankAccountForm";
+import { FavouriteGigs } from "./Pages/FavouriteGigs";
+import { UpdateUserProfile } from "./Pages/UpdateUserProfile";
 
-export const windowContext = createContext({ windowWidth: 0, windowHeight: 0 });
+export const windowContext = createContext({ windowWidth: 0 });
 
 const App = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
-  const { user, isAuthenticated, userLoading } = useSelector(
+  const location = useLocation();
+  const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
 
+  const socket = useSocket();
   const globalLoading = useGlobalLoading();
   const globalLoadingText = useGlobalLoadingText();
 
   const [windowWidth, setWindowWidth] = useState(0);
-  const [windowHeight, setWindowHeight] = useState(0);
-
-  const dimBackground = useSelector((state: RootState) => state.dimBackground);
-  let height = document.documentElement.offsetHeight;
   let width = document.documentElement.offsetWidth;
-  const pageheight = window.innerHeight;
-  height = Math.max(pageheight, height);
 
-  useAuthSync()
+  useAuthSync();
+
+  useEffect(() => {
+    socket.on("connect_error", (err) => {
+      console.log(err);
+    });
+
+    return () => {
+      socket.off("connect_error");
+    };
+  }, [socket]);
 
   useEffect(() => {
     let resizeWindow = () => {
       setWindowWidth(window.innerWidth);
-      setWindowHeight(window.innerHeight);
     };
     resizeWindow();
     window.addEventListener("resize", resizeWindow);
     return () => window.removeEventListener("resize", resizeWindow);
   }, []);
-
 
   // List of paths where footer will be hidden
   const pathsWithoutFooter = [
@@ -104,7 +103,7 @@ const App = () => {
   return (
     <>
       <ScrollToTop>
-        <windowContext.Provider value={{ windowWidth, windowHeight }}>
+        <windowContext.Provider value={{ windowWidth }}>
           <CloudinaryContext cloudName="dyod45bn8" uploadPreset="syxrot1t">
             <SocketContextProvider>
               <DataSendingLoading
@@ -138,7 +137,7 @@ const App = () => {
                 <Route path="/gig/details/:id" element={<GigDetail />} />
                 <Route path="*" element={<NotFoundPage />} />
                 <Route
-                  path="/gig/create/new/gig"
+                  path="/gig/create/new/gig/:id"
                   element={
                     <ProtectedRoute>
                       <CreateGig />
@@ -219,14 +218,7 @@ const App = () => {
                   }
                 />
               </Routes>
-              <div
-                style={{ height: height - (width > 600 ? 81 : 143) }}
-                className={
-                  "search-bar-dim-background " +
-                  (dimBackground ? "visible" : null)
-                }
-              ></div>
-              {!hideFooter && <Footer />}
+              <Footer />
             </SocketContextProvider>
           </CloudinaryContext>
         </windowContext.Provider>

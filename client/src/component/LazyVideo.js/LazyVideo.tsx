@@ -7,12 +7,14 @@ type LazyVideoProps = {
   file: IFile;
   lazyLoad?: boolean;
   aspectRatio?: string | number;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 };
 
 export const LazyVideo = ({
   file,
   lazyLoad = false,
   aspectRatio = "auto",
+  objectFit = 'contain'
 }: LazyVideoProps) => {
   const { blurhash } = file;
   const defaultBlurhash = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
@@ -24,18 +26,18 @@ export const LazyVideo = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <video
         data-poster={getPosterForVideo(file.url)}
         poster={lazyLoad ? "" : getPosterForVideo(file.url)}
-        className="w-full object-contain"
-        style={{ aspectRatio: aspectRatio }}
+        className={`w-full`}
+        style={{ aspectRatio: aspectRatio, objectFit: objectFit }}
         src={file.url}
         controls
         preload="none"
       ></video>
       <Blurhash
-        className="absolute z-20 top-0 left-0"
+        className="!absolute z-20 top-0 left-0"
         hash={blurhash ? blurhash : defaultBlurhash}
         width="100%"
         height="100%"
