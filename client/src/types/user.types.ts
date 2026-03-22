@@ -12,7 +12,7 @@ export interface ILanguage {
 }
 
 export interface IReview {
-  user: IUser | string;
+  user: IUserLite;
   name: string;
   avatar?: IFile;
   country: string;
@@ -59,7 +59,7 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
-  avatar?: IFile;
+  avatar: IFile;
   phone?: IPhone;
   ratings: number;
   numOfRatings: number;

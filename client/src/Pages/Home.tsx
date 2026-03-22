@@ -1,13 +1,14 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { getAllGig } from "../actions/gigAction";
+import { getAllGig, updateGigUsersOnlineStatus } from "../actions/gigAction";
 import { GigCard } from "../component/GigCard/GigCard";
 import { SearchTagsBar } from "../component/SearchTagsBar";
 import useLazyLoading from "../hooks/useLazyLoading";
 import { AppDispatch, RootState } from "../store";
 import { IUser } from "../types/user.types";
 import { useSocket } from "../context/socketContext";
+import { ONLINE_STATUS } from "../types/miscellaneous.types";
 
 export const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -20,30 +21,6 @@ export const Home = () => {
   const [gigUserOnline, setGigUserOnline] = useState<Map<string, boolean>>(
     new Map()
   );
-
-  // useEffect(() => {
-  //   if (isAuthenticated && user) {
-  //     setGigUserOnline((prev) => prev.set(user._id, true));
-  //   }
-  // }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    const ids = gigs?.map((gig) => (gig.user as IUser)._id) || [];
-    socket.emit("get_users_online_status", ids);
-
-    socket.on("users_online_status_from_server", (data) => {
-      console.log("users_online_status_from_server", data);
-      const map = new Map<string, boolean>();
-      data.forEach((item: { id: string; online: boolean }) => {
-        map.set(item.id, item.online);
-      });
-      setGigUserOnline(map);
-    });
-
-    return () => {
-      socket.off("users_online_status_from_server");
-    };
-  }, [gigs, socket]);
 
   useEffect(() => {
     let path = location.pathname;
@@ -68,30 +45,52 @@ export const Home = () => {
     }
   }, [location.pathname, location.search]);
 
-  useEffect(() => {
-    dispatch(getAllGig());
-  }, [dispatch]);
+  // memoizing gig users ids key to prevent infinite fetch
+  const gigUserIdsKey = useMemo(() => {
+    if (!gigs || gigs.length === 0) return "";
+    return Array.from(new Set(gigs.map((gig) => gig.user._id)))
+      .sort()
+      .join(",");
+  }, [gigs]);
 
-  // Tracking the online status of the gigs listed in the home page
+  // emit event to fetch online status of gig's user
   useEffect(() => {
-    socket.on("online_from_server", (userId) => {
-      const map = new Map(gigUserOnline);
-      map.set(userId, true);
-      setGigUserOnline(map);
-    });
+    if (!gigUserIdsKey) return;
+    socket.emit("get_users_online_status", gigUserIdsKey.split(","));
+  }, [gigUserIdsKey]);
 
-    socket.on("offline_from_server", (userId) => {
-      console.log("offline_from_server", userId);
-      const map = new Map(gigUserOnline);
-      map.set(userId, false);
-      setGigUserOnline(map);
-    });
+  // update online status
+  useEffect(() => {
+    const handler = (onlineStatusList: ONLINE_STATUS[]) => {
+      dispatch(updateGigUsersOnlineStatus(onlineStatusList));
+    };
+
+    socket.on("online_user_snapshot", handler);
+    return () => {
+      socket.off("online_user_snapshot", handler);
+    };
+  }, [dispatch, socket]);
+
+  // Updating online | offline status of a particular user
+  useEffect(() => {
+    const onlineHandler = (userId: string) => {
+      console.log("online from server")
+      dispatch(updateGigUsersOnlineStatus([{ userId, isOnline: true }]));
+    };
+
+    const offlineHandler = (userId: string) => {
+      console.log("offline from server")
+      dispatch(updateGigUsersOnlineStatus([{ userId, isOnline: false }]));
+    };
+
+    socket.on("online_from_server", onlineHandler);
+    socket.on("offline_from_server", offlineHandler);
 
     return () => {
-      socket.off("online_from_server");
-      socket.off("offline_from_server");
+      socket.off("online_from_server", onlineHandler);
+      socket.off("offline_from_server", offlineHandler);
     };
-  }, [socket, dispatch, gigUserOnline]);
+  }, [dispatch, socket]);
 
   // LAZY LOADING THE IMAGES AND VIDEOS
   useLazyLoading({ dependencies: [gigs] });
