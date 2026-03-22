@@ -2,29 +2,27 @@ import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { setRedirectUrl } from "../utility/util";
-import { RootState } from "../store";
+import { AppDispatch, RootState } from "../store";
+import { useDispatch } from "react-redux";
+import { loadUser } from "../actions/userAction";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
 };
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, isAuthenticated } = useSelector(
+  const { isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
 
-  const navigate = useNavigate();
-
   const location = useLocation();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setRedirectUrl(location.pathname);
-      navigate("/login");
-    }
-  }, [user, isAuthenticated, location.pathname, navigate]);
+  if (!isAuthenticated) {
+    setRedirectUrl(location.pathname);
+    return <Navigate to="/login" replace />;
+  }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../src/component/common.css";
@@ -26,12 +26,12 @@ import { Tooltip } from "./component/Tooltip/Tooltip";
 import "./utility/color";
 import Cookies from "js-cookie";
 import "react-tooltip/dist/react-tooltip.css";
+import SocketContextProvider from "./context/socketContext";
 import { BalanceDetail } from "./Pages/BalanceDetail";
 import { BuyerFeedback } from "./Pages/BuyerFeedback";
 import { OrderDetail } from "./Pages/OrderDetail";
 import { Orders } from "./Pages/Orders";
 import { SignUp } from "./Pages/SignUp";
-
 import { useDispatch } from "react-redux";
 import { DataSendingLoading } from "./component/DataSendingLoading";
 import ProtectedRoute from "./component/ProtectedRoute";
@@ -41,6 +41,7 @@ import {
   useGlobalLoading,
   useGlobalLoadingText,
 } from "./context/globalLoadingContext";
+import { useAuthSync } from "./hooks/useAuthSync";
 import { useSocket } from "./context/socketContext";
 import { BankAccountForm } from "./Pages/BankAccountForm";
 import { FavouriteGigs } from "./Pages/FavouriteGigs";
@@ -50,6 +51,7 @@ export const windowContext = createContext({ windowWidth: 0 });
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
@@ -59,13 +61,9 @@ const App = () => {
   const globalLoadingText = useGlobalLoadingText();
 
   const [windowWidth, setWindowWidth] = useState(0);
+  let width = document.documentElement.offsetWidth;
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      await dispatch(loadUser());
-    };
-    fetchUser();
-  }, []);
+  useAuthSync();
 
   useEffect(() => {
     socket.on("connect_error", (err) => {
@@ -81,140 +79,147 @@ const App = () => {
     let resizeWindow = () => {
       setWindowWidth(window.innerWidth);
     };
-    window.addEventListener("resize", resizeWindow);
     resizeWindow();
+    window.addEventListener("resize", resizeWindow);
     return () => window.removeEventListener("resize", resizeWindow);
   }, []);
 
-  // SHOW ONLINE STATUS OF THE USER
-  useEffect(() => {
-    socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-    const interval = setInterval(() => {
-      socket.emit("online", isAuthenticated ? user?._id.toString() : null);
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [user, isAuthenticated, socket]);
+  // List of paths where footer will be hidden
+  const pathsWithoutFooter = [
+    "/get/all/messages/for/current/user",
+    "/gig/create/new/gig",
+    "/login",
+    "/signUp",
+    "/orders/",
+    "/update/profile",
+    "/reset/password/",
+  ]; // Add any other paths here
+
+  // Checking if the current location matches any path in pathsWithoutFooter
+  const hideFooter = pathsWithoutFooter.some((path) =>
+    location.pathname.startsWith(path)
+  );
 
   return (
     <>
       <ScrollToTop>
         <windowContext.Provider value={{ windowWidth }}>
           <CloudinaryContext cloudName="dyod45bn8" uploadPreset="syxrot1t">
-            <DataSendingLoading
-              show={globalLoading}
-              loadingText={globalLoadingText}
-            />
-            <Tooltip place="bottom" />
-            {windowWidth < 900 && <Sidebar></Sidebar>}
-            <Header></Header>
-            <ToastContainer />
-            <Routes>
-              <Route
-                path="/reset/password/:token"
-                element={<ResetPassword />}
-              ></Route>
-              <Route
-                path="/get/all/messages/for/current/user"
-                element={
-                  <ProtectedRoute>
-                    <Inbox />
-                  </ProtectedRoute>
-                }
-              ></Route>
+            <SocketContextProvider>
+              <DataSendingLoading
+                show={globalLoading}
+                loadingText={globalLoadingText}
+              />
+              <Tooltip place="bottom" />
+              {windowWidth < 900 && <Sidebar></Sidebar>}
+              <Header></Header>
+              <ToastContainer />
+              <Routes>
+                <Route
+                  path="/reset/password/:token"
+                  element={<ResetPassword />}
+                ></Route>
+                <Route
+                  path="/get/all/messages/for/current/user"
+                  element={
+                    <ProtectedRoute>
+                      <Inbox />
+                    </ProtectedRoute>
+                  }
+                ></Route>
 
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signUp" element={<SignUp />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signUp" element={<SignUp />} />
 
-              <Route path="/user/:id" element={<UserDetail />} />
-              <Route path="/gig/details/:id" element={<GigDetail />} />
-              <Route path="*" element={<NotFoundPage />} />
-              <Route
-                path="/gig/create/new/gig/:id"
-                element={
-                  <ProtectedRoute>
-                    <CreateGig />
-                  </ProtectedRoute>
-                }
-              ></Route>
-              <Route
-                path="/gig/place/order/:id/:packageNumber"
-                element={
-                  <ProtectedRoute>
-                    <PlaceOrder />
-                  </ProtectedRoute>
-                }
-              ></Route>
-              <Route path="/test" element={<Test />}></Route>
-              <Route
-                path="/gig/place/order/submit/requirements/:orderId"
-                element={
-                  <ProtectedRoute>
-                    <SubmitRequirements />
-                  </ProtectedRoute>
-                }
-              ></Route>
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:id/feedback"
-                element={
-                  <ProtectedRoute>
-                    <BuyerFeedback />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/balance/detail"
-                element={
-                  <ProtectedRoute>
-                    <BalanceDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my/favourite/gigs"
-                element={
-                  <ProtectedRoute>
-                    <FavouriteGigs />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/update/profile"
-                element={
-                  <ProtectedRoute>
-                    <UpdateUserProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/bank_account"
-                element={
-                  <ProtectedRoute>
-                    <BankAccountForm />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-            <Footer />
+                <Route path="/user/:id" element={<UserDetail />} />
+                <Route path="/gig/details/:id" element={<GigDetail />} />
+                <Route path="*" element={<NotFoundPage />} />
+                <Route
+                  path="/gig/create/new/gig/:id"
+                  element={
+                    <ProtectedRoute>
+                      <CreateGig />
+                    </ProtectedRoute>
+                  }
+                ></Route>
+                <Route
+                  path="/gig/place/order/:id/:packageNumber"
+                  element={
+                    <ProtectedRoute>
+                      <PlaceOrder />
+                    </ProtectedRoute>
+                  }
+                ></Route>
+                <Route path="/test" element={<Test />}></Route>
+                <Route
+                  path="/gig/place/order/submit/requirements/:orderId"
+                  element={
+                    <ProtectedRoute>
+                      <SubmitRequirements />
+                    </ProtectedRoute>
+                  }
+                ></Route>
+                <Route
+                  path="/orders"
+                  element={
+                    <ProtectedRoute>
+                      <Orders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/orders/:id"
+                  element={
+                    <ProtectedRoute>
+                      <OrderDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/orders/:id/feedback"
+                  element={
+                    <ProtectedRoute>
+                      <BuyerFeedback />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/balance/detail"
+                  element={
+                    <ProtectedRoute>
+                      <BalanceDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my/favourite/gigs"
+                  element={
+                    <ProtectedRoute>
+                      <FavouriteGigs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/update/profile"
+                  element={
+                    <ProtectedRoute>
+                      <UpdateUserProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/bank_account"
+                  element={
+                    <ProtectedRoute>
+                      <BankAccountForm />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+              <Footer />
+            </SocketContextProvider>
           </CloudinaryContext>
         </windowContext.Provider>
       </ScrollToTop>

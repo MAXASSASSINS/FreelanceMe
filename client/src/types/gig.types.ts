@@ -1,6 +1,16 @@
 import { QuestionType } from "./../constants/globalConstants";
 import { IFile } from "./file.types";
-import { IReview, IUser } from "./user.types";
+import { IUser, IUserLite } from "./user.types";
+
+export interface IReview {
+  user: IUserLite;
+  name: string;
+  avatar: IFile,
+  country: string;
+  rating: number;
+  comment: string;
+  createdAt?: Date;
+}
 
 export interface IPricing {
   packageTitle: string;
@@ -35,7 +45,7 @@ export interface IGig {
   numOfReviews: number;
   reviews: IReview[];
   createdAt?: Date;
-  user: IUser | string;
+  user: IUserLite | IUser;
   active?: boolean;
   requirements: IGigRequirement[];
 }
