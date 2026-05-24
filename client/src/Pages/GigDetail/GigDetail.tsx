@@ -3,7 +3,7 @@ import { Editor, EditorState, convertFromRaw } from "draft-js";
 import "moment-timezone";
 import { useEffect, useRef, useState } from "react";
 import { HiStar } from "react-icons/hi";
-import Moment from "react-moment";
+import Moment from "../../component/Moment/Moment";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";

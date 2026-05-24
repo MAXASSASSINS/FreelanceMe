@@ -1,6 +1,6 @@
 import { Rating } from "@mui/material";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { RootState } from "../../store";

@@ -1,7 +1,7 @@
 import { BiTimeFive } from "react-icons/bi";
 import { GoPencil } from "react-icons/go";
 import { RiRocket2Line } from "react-icons/ri";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { RootState } from "../../store";
