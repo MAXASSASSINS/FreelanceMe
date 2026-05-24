@@ -16,7 +16,7 @@ const OrderedGigCard = ({ orderDetail }:  OrderedGigCardProps) => {
     switch (orderDetail.status) {
       case "Pending":
         return "bg-yellow-500";
-      case "IN_PROGRESS":
+      case "In Progress":
         return "bg-blue-500";
       case "Completed":
         return "bg-primary";

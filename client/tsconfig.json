@@ -8,7 +8,6 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "es2015",
-    "types": ["vite/client"],
 
     "allowJs": true,
     "allowSyntheticDefaultImports": true,

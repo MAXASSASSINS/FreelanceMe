@@ -124,8 +124,6 @@ export const GigDetail = () => {
     return <div className="min-h-screen w-full"></div>
   }
 
-  gigDetail.user = gigDetail.user as IUser;
-
   return <>
       {showChatBox && (
         <Chat

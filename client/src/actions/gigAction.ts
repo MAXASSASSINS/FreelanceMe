@@ -15,7 +15,7 @@ import {
   USER_GIGS_REQUEST,
   USER_GIGS_SUCCESS,
 } from "../constants/gigConstants";
-import { IGig } from "../types/gig.types";
+import { IGig, IGigDetail } from "../types/gig.types";
 import { axiosInstance } from "../utility/axiosInstance";
 import { ONLINE_STATUS } from "../types/miscellaneous.types";
 
@@ -149,7 +149,7 @@ export const clearErrors = () => async (dispatch: Dispatch<AnyAction>) => {
 };
 
 export const updateGigDetail =
-  (data: IGig) => async (dispatch: Dispatch<AnyAction>) => {
+  (data: IGigDetail) => async (dispatch: Dispatch<AnyAction>) => {
     dispatch({
       type: GIG_DETAIL_SUCCESS,
       payload: data,

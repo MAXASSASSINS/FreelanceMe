@@ -54,12 +54,16 @@ export interface IRazorPayAccountDetails {
   accountHolderName: string;
 }
 
-export interface IUser {
+export interface IUserLite {
   _id: string;
   name: string;
   email: string;
-  password: string;
   avatar: IFile;
+  isOnline: boolean;
+}
+
+export interface IUser extends IUserLite {
+  password: string;
   phone?: IPhone;
   ratings: number;
   numOfRatings: number;
@@ -85,13 +89,4 @@ export interface IUser {
   emailVerificationToken?: string;
   emailVerificationExpire?: Date;
   isEmailVerified: boolean;
-  isOnline: boolean
-}
-
-export interface IUserLite {
-  _id: string;
-  name: string;
-  email: string;
-  avatar: IFile;
-  isOnline: boolean
 }
