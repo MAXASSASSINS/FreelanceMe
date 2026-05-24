@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Avatar } from "../Avatar/Avatar";
 import { RatingStars } from "../RatingStars/RatingStars";
 import { flags } from "../../data/country-flags";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { IReview } from "../../types/user.types";
 
 type ReviewsListProps = {
