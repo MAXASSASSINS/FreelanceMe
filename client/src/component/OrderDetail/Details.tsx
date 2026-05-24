@@ -71,7 +71,7 @@ export const Details = ({ orderDetail }: DetailsProps) => {
               <li className="list-inside list-disc">
                 {revisions < 1e6 ? revisions : "Unlimited"}
                 {' '}
-                {revisions === 1 ? "revison" : "revisions"}
+                {revisions === 1 ? "revision" : "revisions"}
               </li>
               {sourceFile && (
                 <li className="list-inside list-disc">Include source file</li>
