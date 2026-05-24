@@ -6,7 +6,7 @@ import {
   GIG_DETAIL_SUCCESS,
   UPDATE_GIG_DETAIL_SUCCESS,
 } from "../../constants/gigConstants";
-import { IGig } from "../../types/gig.types";
+import { IGigDetail } from "../../types/gig.types";
 
 type Action = {
   type: string;
@@ -14,7 +14,7 @@ type Action = {
 };
 
 export type GigDetailReducerState = {
-  gigDetail: IGig | null;
+  gigDetail: IGigDetail | null;
   gigLoading: boolean;
   gigError?: string | null;
 };

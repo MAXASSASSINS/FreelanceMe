@@ -3,7 +3,7 @@ import { FiPackage } from "react-icons/fi";
 import { IUser } from "../../types/user.types";
 import { RootState } from "../../store";
 import { useSelector } from "react-redux";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { Link } from "react-router-dom";
 import { LazyVideo } from "../LazyVideo.js/LazyVideo";
 import { LazyImage } from "../LazyImage/LazyImage";

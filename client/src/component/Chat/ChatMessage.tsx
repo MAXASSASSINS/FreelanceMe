@@ -1,6 +1,6 @@
 import { HiDownload } from "react-icons/hi";
 import { IoDocumentOutline } from "react-icons/io5";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { IMessage } from "../../types/message.types";

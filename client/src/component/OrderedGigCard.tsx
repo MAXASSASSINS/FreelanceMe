@@ -1,7 +1,7 @@
 import React from "react";
 import { FiCheck } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
-import Moment from "react-moment";
+import Moment from "./Moment/Moment";
 import { Link } from "react-router-dom";
 import { LazyImage } from "./LazyImage/LazyImage";
 import { IOrder } from "../types/order.types";
@@ -16,7 +16,7 @@ const OrderedGigCard = ({ orderDetail }:  OrderedGigCardProps) => {
     switch (orderDetail.status) {
       case "Pending":
         return "bg-yellow-500";
-      case "IN_PROGRESS":
+      case "In Progress":
         return "bg-blue-500";
       case "Completed":
         return "bg-primary";

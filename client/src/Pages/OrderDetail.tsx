@@ -46,7 +46,7 @@ export const OrderDetail = () => {
 
   return (
     <div className="bg-separator  min-[1450px]:flex justify-center">
-      <div className="p-6 sm:p-12 md:p-16 xl:p-20 min-[1450px]:max-w-[1400px]">
+      <div className="p-6 sm:p-12 md:p-16 xl:p-20 w-full min-[1450px]:max-w-[1400px]">
         <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* ORDER LATE WARNING  */}

@@ -166,7 +166,7 @@
     height: 81px;
     display: flex;
     align-items: center;
-    width: 100vw;
+    width: 100%;
     padding-top: 0;
   }
 

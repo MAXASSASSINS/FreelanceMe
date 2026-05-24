@@ -45,7 +45,11 @@ export interface IGig {
   numOfReviews: number;
   reviews: IReview[];
   createdAt?: Date;
-  user: IUserLite | IUser;
+  user: IUserLite;
   active?: boolean;
   requirements: IGigRequirement[];
+}
+
+export interface IGigDetail extends Omit<IGig, "user"> {
+  user: IUser;
 }
