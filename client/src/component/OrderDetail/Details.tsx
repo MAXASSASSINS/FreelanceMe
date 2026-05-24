@@ -1,4 +1,4 @@
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { Link } from "react-router-dom";
 import { IOrder } from "../../types/order.types";
 import { IUser } from "../../types/user.types";

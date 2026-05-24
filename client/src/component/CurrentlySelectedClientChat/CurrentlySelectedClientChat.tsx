@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState
 } from "react";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { Link } from "react-router-dom";
 import { IMessage } from "../../types/message.types";
 import { IUser } from "../../types/user.types";

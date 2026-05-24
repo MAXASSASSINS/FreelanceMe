@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import Moment from "react-moment";
+import Moment from "../component/Moment/Moment";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { axiosInstance } from "../utility/axiosInstance";

@@ -1,5 +1,5 @@
 import React from "react";
-import Moment from "react-moment";
+import Moment from "./Moment/Moment";
 
 type DateTagProps = {
   date: string;

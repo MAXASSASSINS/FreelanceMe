@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Avatar } from "../Avatar/Avatar";
 import { IoLocationSharp } from "react-icons/io5";
 import { FaPaperPlane, FaUser } from "react-icons/fa";
-import Moment from "react-moment";
+import Moment from "../Moment/Moment";
 import { RootState } from "../../store";
 import { useSelector } from "react-redux";
 import { RatingStars } from "../RatingStars/RatingStars";
