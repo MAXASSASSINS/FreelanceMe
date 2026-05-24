@@ -38,7 +38,7 @@ export const LazyImage = ({
 
   url = url.replace("/upload/", `/upload/${transform}/`);
 
-  console.log(url)
+  // console.log(url)
   return (
     <div className="relative h-full">
       <img
